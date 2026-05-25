@@ -1,0 +1,111 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false; 
+    }
+    
+    // Primitives
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null && request.auth.token.email_verified == true; }
+    function isAdmin() { return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    function isValidId(id) { return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    
+    // Blueprints
+    function isValidUser(data) {
+      return data.keys().hasAll(['name', 'email', 'role', 'createdAt']) 
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 64
+        && data.email is string && data.email.size() > 0 && data.email.size() <= 128
+        && data.role is string && (data.role == 'student' || data.role == 'admin')
+        && data.createdAt == request.time;
+    }
+    
+    function isValidCourse(data) {
+      return data.keys().hasAll(['name', 'department', 'credits', 'capacity', 'enrolled'])
+        && data.name is string && data.name.size() <= 128
+        && data.department is string && data.department.size() <= 64
+        && data.credits is number && data.credits >= 0 && data.credits <= 10
+        && data.capacity is number && data.capacity > 0
+        && data.enrolled is number && data.enrolled >= 0
+        && (!('description' in data) || (data.description is string && data.description.size() <= 1000))
+        && (!('schedule' in data) || (data.schedule is string && data.schedule.size() <= 128))
+        && (!('instructor' in data) || (data.instructor is string && data.instructor.size() <= 128))
+        && (!('prerequisites' in data) || (data.prerequisites is list && data.prerequisites.size() <= 10 && (data.prerequisites.size() == 0 || data.prerequisites[0] is string)));
+    }
+    
+    function isValidEnrollment(data) {
+      return data.keys().hasAll(['studentId', 'courseId', 'status', 'enrolledAt'])
+        && data.studentId == request.auth.uid
+        && data.courseId is string && data.courseId.size() <= 128
+        && data.status is string && (data.status == 'active' || data.status == 'dropped')
+        && data.enrolledAt == request.time;
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      
+      allow create: if isSignedIn() 
+        && isValidId(userId) 
+        && request.auth.uid == userId
+        && isValidUser(incoming())
+        && incoming().keys().size() == 4
+        && incoming().role == 'student';
+        
+      allow update: if isSignedIn()
+        && isValidId(userId)
+        && request.auth.uid == userId
+        && (
+            isAdmin() ||
+            (
+                incoming().diff(existing()).affectedKeys().hasOnly(['name']) 
+                && incoming().name is string 
+                && incoming().name.size() > 0 
+                && incoming().name.size() <= 64
+                && incoming().role == existing().role
+                && incoming().email == existing().email
+                && incoming().createdAt == existing().createdAt
+            )
+        );
+        
+      allow delete: if isAdmin();
+    }
+    
+    match /courses/{courseId} {
+      allow get: if isSignedIn() && isValidId(courseId);
+      allow list: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    
+    match /enrollments/{enrollmentId} {
+      allow get: if isSignedIn() && isValidId(enrollmentId) && (existing().studentId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && resource.data.studentId == request.auth.uid;
+      
+      allow create: if isSignedIn()
+        && isValidId(enrollmentId)
+        && isValidEnrollment(incoming())
+        && incoming().keys().size() == 4
+        && exists(/databases/$(database)/documents/courses/$(incoming().courseId));
+        
+      allow update: if isSignedIn() && isValidId(enrollmentId)
+        && (
+            isAdmin() || 
+            (
+                existing().studentId == request.auth.uid
+                && incoming().diff(existing()).affectedKeys().hasOnly(['status'])
+                && incoming().status == 'dropped'
+                && incoming().studentId == existing().studentId
+                && incoming().courseId == existing().courseId
+                && incoming().enrolledAt == existing().enrolledAt
+            )
+        );
+        
+      allow delete: if isAdmin();
+    }
+    
+    match /admins/{uid} {
+       allow read, write: if false; 
+    }
+  }
+}

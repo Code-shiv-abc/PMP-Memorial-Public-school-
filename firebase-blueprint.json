@@ -1,0 +1,62 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile containing PII and system roles.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "admin", "instructor"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "role", "createdAt"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Academic course information.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "department": { "type": "string" },
+        "credits": { "type": "number" },
+        "description": { "type": "string" },
+        "schedule": { "type": "string" },
+        "instructor": { "type": "string" },
+        "capacity": { "type": "number" },
+        "enrolled": { "type": "number" },
+        "prerequisites": { 
+          "type": "array", 
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["name", "department", "credits", "capacity", "enrolled"]
+    },
+    "Enrollment": {
+      "title": "Enrollment",
+      "description": "Junction document mapping students to courses.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "courseId": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "dropped"] },
+        "enrolledAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentId", "courseId", "status", "enrolledAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Core profile store for all app users."
+    },
+    "/courses/{courseId}": {
+      "schema": { "$ref": "#/entities/Course" },
+      "description": "Catalog of all school courses."
+    },
+    "/enrollments/{enrollmentId}": {
+      "schema": { "$ref": "#/entities/Enrollment" },
+      "description": "Student course enrollment ledger."
+    }
+  }
+}
