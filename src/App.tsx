@@ -9,6 +9,7 @@ import { ScrollToTop } from './components/ScrollToTop';
 import { MainLayout } from './components/MainLayout';
 import { PortalLayout } from './components/PortalLayout';
 import { FullPageSpinner } from './components/FullPageSpinner';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 const Home = React.lazy(() => import('./pages/Home'));
 const Admissions = React.lazy(() => import('./pages/Admissions'));
@@ -40,12 +41,14 @@ export default function App() {
           </Route>
 
           {/* Portal/Dashboard Routes */}
-          <Route path="/portal" element={<PortalLayout />}>
-            <Route index element={<PortalDashboard />} />
-            <Route path="courses" element={<Courses />} />
-            <Route path="assignments" element={<div className="p-8 text-center"><h2 className="text-2xl font-serif font-bold">Assignments</h2></div>} />
-            <Route path="schedule" element={<div className="p-8 text-center"><h2 className="text-2xl font-serif font-bold">My Schedule</h2></div>} />
-            <Route path="settings" element={<div className="p-8 text-center"><h2 className="text-2xl font-serif font-bold">Account Settings</h2></div>} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/portal" element={<PortalLayout />}>
+              <Route index element={<PortalDashboard />} />
+              <Route path="courses" element={<Courses />} />
+              <Route path="assignments" element={<div className="p-8 text-center"><h2 className="text-2xl font-serif font-bold">Assignments</h2></div>} />
+              <Route path="schedule" element={<div className="p-8 text-center"><h2 className="text-2xl font-serif font-bold">My Schedule</h2></div>} />
+              <Route path="settings" element={<div className="p-8 text-center"><h2 className="text-2xl font-serif font-bold">Account Settings</h2></div>} />
+            </Route>
           </Route>
 
           {/* Fallback route */}
