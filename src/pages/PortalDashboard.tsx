@@ -1,65 +1,89 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Calendar, Clock, ArrowRight, Award, CheckCircle, Sparkles, TrendingUp } from "lucide-react";
+import { FileText, Calendar, Clock, ArrowRight, Award, CheckCircle, Sparkles, TrendingUp, AlertCircle } from "lucide-react";
 import { auth } from "@/lib/firebase";
+import { useUserProfile } from "@/src/hooks/useUserProfile";
 
 export default function PortalDashboard() {
   const currentUser = auth.currentUser;
-  
-  const userData = {
-    name: currentUser?.displayName || "Student",
-    gpa: "3.8",
-    attendance: 92,
-    assignmentsDue: 2,
-    courses: [
-      { name: "Advanced Mathematics", code: "MAT-301", teacher: "Prof. Sarah Jenkins", progress: 85 },
-      { name: "Computer Science II", code: "CSC-202", teacher: "Dr. Michael Chen", progress: 60 },
-      { name: "Physics: Thermodynamics", code: "PHY-401", teacher: "Dr. Robert Smith", progress: 92 },
-      { name: "English Literature", code: "ENG-105", teacher: "Prof. Emily Post", progress: 78 }
-    ],
-    schedule: [
-      { time: "09:00 AM", title: "Advanced Mathematics", type: "Lecture", room: "Room 302" },
-      { time: "11:30 AM", title: "Physics Lab", type: "Laboratory", room: "Science Block B" },
-      { time: "02:00 PM", title: "Computer Science II", type: "Tutorial", room: "Computer Lab 1" }
-    ],
-    tasks: [
-      { title: "Math Assignment 4", due: "Tomorrow, 11:59 PM", priority: "High" },
-      { title: "Physics Project Draft", due: "in 3 days", priority: "Medium" }
-    ]
-  };
+  const { data: userData, loading, error } = useUserProfile();
+
+  if (loading) {
+    return (
+      <div className="space-y-6 max-w-6xl mx-auto">
+        <div>
+          <div className="h-8 bg-muted rounded w-48 mb-2 animate-pulse"></div>
+          <div className="h-4 bg-muted rounded w-64 animate-pulse"></div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="h-32 bg-muted rounded-xl animate-pulse"></div>
+          <div className="h-32 bg-muted rounded-xl animate-pulse"></div>
+          <div className="h-32 bg-muted rounded-xl animate-pulse"></div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+             <div className="h-64 bg-muted rounded-xl animate-pulse"></div>
+          </div>
+          <div className="space-y-6">
+             <div className="h-48 bg-muted rounded-xl animate-pulse"></div>
+             <div className="h-48 bg-muted rounded-xl animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !userData) {
+    return (
+      <div className="space-y-6 max-w-6xl mx-auto">
+        <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-lg flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <p>{error || "Profile not found. Please contact your administrator."}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const displayName = userData.name || currentUser?.displayName || "Student";
+  const firstName = displayName.split(' ')[0];
 
   // Derive personalized recommendations natively
-  const lowestCourse = [...userData.courses].sort((a, b) => a.progress - b.progress)[0];
+  const hasCourses = userData.courses && userData.courses.length > 0;
+  const lowestCourse = hasCourses ? [...userData.courses].sort((a, b) => a.progress - b.progress)[0] : null;
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <div>
-        <h1 className="text-2xl font-serif font-bold text-foreground">Welcome back, {userData.name.split(' ')[0]}!</h1>
+        <h1 className="text-2xl font-serif font-bold text-foreground">Welcome back, {firstName}!</h1>
         <p className="text-muted-foreground">Here's what's happening with your courses today.</p>
       </div>
 
       {/* Personalized AI Insight Feature */}
-      <div className="bg-gradient-to-r from-primary/20 via-background to-background border border-primary/20 rounded-xl p-6 flex flex-col md:flex-row gap-6 items-center shadow-lg relative overflow-hidden">
-        <div className="absolute -right-10 -top-10 opacity-5 pointer-events-none">
-           <Sparkles className="w-48 h-48" />
+      {hasCourses && lowestCourse && (
+        <div className="bg-gradient-to-r from-primary/20 via-background to-background border border-primary/20 rounded-xl p-6 flex flex-col md:flex-row gap-6 items-center shadow-lg relative overflow-hidden">
+          <div className="absolute -right-10 -top-10 opacity-5 pointer-events-none">
+             <Sparkles className="w-48 h-48" />
+          </div>
+          <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center shrink-0 border border-primary/30">
+            <Sparkles className="w-6 h-6 text-primary" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-serif font-bold text-foreground mb-1 text-lg">Personalized Insight</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Based on your recent activity, your progress in <strong className="text-foreground font-semibold">{lowestCourse.name}</strong> is currently at <strong className="text-foreground">{lowestCourse.progress}%</strong>.
+              Consider dedicating your 2:00 PM tutorial today entirely to reviewing chapter 4. We recommend attempting the practice quiz before Friday.
+            </p>
+          </div>
+          <div>
+            <Button className="shrink-0 gap-2 font-semibold">
+              <TrendingUp className="w-4 h-4" /> View Study Plan
+            </Button>
+          </div>
         </div>
-        <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center shrink-0 border border-primary/30">
-          <Sparkles className="w-6 h-6 text-primary" />
-        </div>
-        <div className="flex-1">
-          <h3 className="font-serif font-bold text-foreground mb-1 text-lg">Personalized Insight</h3>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            Based on your recent activity, your progress in <strong className="text-foreground font-semibold">{lowestCourse.name}</strong> is currently at <strong className="text-foreground">{lowestCourse.progress}%</strong>. 
-            Consider dedicating your 2:00 PM tutorial today entirely to reviewing chapter 4. We recommend attempting the practice quiz before Friday.
-          </p>
-        </div>
-        <div>
-          <Button className="shrink-0 gap-2 font-semibold">
-            <TrendingUp className="w-4 h-4" /> View Study Plan
-          </Button>
-        </div>
-      </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -68,7 +92,7 @@ export default function PortalDashboard() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-serif font-semibold text-muted-foreground uppercase tracking-wider mb-1">Current GPA</p>
-                <p className="text-4xl font-serif font-bold text-foreground">{userData.gpa}<span className="text-lg text-muted-foreground font-normal">/4.0</span></p>
+                <p className="text-4xl font-serif font-bold text-foreground">{userData.gpa.toFixed(1)}<span className="text-lg text-muted-foreground font-normal">/4.0</span></p>
               </div>
               <div className="p-3 bg-green-500/10 text-green-400 rounded-lg">
                 <Award className="w-6 h-6" />
