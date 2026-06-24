@@ -1,108 +1,33 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BookOpen, Calendar as CalendarIcon, Clock, Users, CheckCircle, Search, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
-
-// Course Catalog Data
-const CATALOG = [
-  {
-    id: "CS101",
-    name: "Introduction to Computer Science",
-    department: "Computer Science",
-    credits: 3,
-    description: "An introductory course covering the fundamentals of programming, algorithms, and logical thinking.",
-    prerequisites: ["None"],
-    schedule: "Mon/Wed 10:00 AM - 11:30 AM",
-    instructor: "Dr. Alan Turing",
-    capacity: 40,
-    enrolled: 38
-  },
-  {
-    id: "CS202",
-    name: "Computer Science II",
-    department: "Computer Science",
-    credits: 4,
-    description: "Advanced data structures, object-oriented programming, and complexity analysis.",
-    prerequisites: ["CS101"],
-    schedule: "Tue/Thu 02:00 PM - 03:30 PM",
-    instructor: "Dr. Michael Chen",
-    capacity: 35,
-    enrolled: 12
-  },
-  {
-    id: "MAT301",
-    name: "Advanced Mathematics",
-    department: "Mathematics",
-    credits: 4,
-    description: "Calculus, differential equations, and linear algebra applications.",
-    prerequisites: ["MAT201"],
-    schedule: "Mon/Wed/Fri 09:00 AM - 10:00 AM",
-    instructor: "Prof. Sarah Jenkins",
-    capacity: 30,
-    enrolled: 30
-  },
-  {
-    id: "PHY401",
-    name: "Physics: Thermodynamics",
-    department: "Physics",
-    credits: 3,
-    description: "Principles of thermodynamics, statistical mechanics, and their applications.",
-    prerequisites: ["PHY202", "MAT301"],
-    schedule: "Tue/Thu 11:00 AM - 12:30 PM",
-    instructor: "Dr. Robert Smith",
-    capacity: 25,
-    enrolled: 22
-  },
-  {
-    id: "ENG105",
-    name: "English Literature",
-    department: "Humanities",
-    credits: 3,
-    description: "Exploration of classical and modern literature, emphasizing critical analysis and writing.",
-    prerequisites: ["None"],
-    schedule: "Wed/Fri 01:00 PM - 02:30 PM",
-    instructor: "Prof. Emily Post",
-    capacity: 45,
-    enrolled: 20
-  },
-  {
-    id: "HIS201",
-    name: "World History",
-    department: "Humanities",
-    credits: 3,
-    description: "A comprehensive overview of global historical events and their modern impacts.",
-    prerequisites: ["None"],
-    schedule: "Mon/Wed 03:00 PM - 04:30 PM",
-    instructor: "Dr. Howard Zinn",
-    capacity: 50,
-    enrolled: 40
-  }
-];
-
-// Initial active user courses
-const INITIAL_ENROLLED = ["MAT301", "CS202", "PHY401", "ENG105"];
+import { useCourses } from "@/src/hooks/useCourses";
+import { Course } from "@/src/types/course";
 
 export default function Courses() {
-  const [enrolledCourseIds, setEnrolledCourseIds] = useState<string[]>(INITIAL_ENROLLED);
+  const { data: catalog, loading, error } = useCourses();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isEnrollDialogOpen, setIsEnrollDialogOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<typeof CATALOG[0] | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [enrollmentStatus, setEnrollmentStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const filteredCatalog = CATALOG.filter(course => 
-    course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    course.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    course.department.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredCatalog = catalog.filter(course =>
+    course.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    course.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    course.department?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const enrolledCourses = CATALOG.filter(c => enrolledCourseIds.includes(c.id));
+  // Hardcode enrolled courses as empty for now since we are just displaying catalog
+  const enrolledCourses: Course[] = [];
 
-  const handleEnrollClick = (course: typeof CATALOG[0]) => {
+  const handleEnrollClick = (course: Course) => {
     setSelectedCourse(course);
     setEnrollmentStatus("idle");
     setIsEnrollDialogOpen(true);
@@ -122,20 +47,6 @@ export default function Courses() {
         return;
       }
       
-      // Simulate prerequisites check natively here
-      const hasMissingPrereq = selectedCourse.prerequisites.some(
-        prereq => prereq !== "None" && !enrolledCourseIds.includes(prereq) && 
-        // Just mock CS101 as completed if not enrolled for the sake of demo, except MAT201 which isn't there
-        prereq !== "CS101" 
-      );
-
-      if (hasMissingPrereq) {
-        setEnrollmentStatus("error");
-        setErrorMessage("You do not meet all prerequisites for this course.");
-        return;
-      }
-
-      setEnrolledCourseIds(prev => [...prev, selectedCourse.id]);
       setEnrollmentStatus("success");
       
       setTimeout(() => {
@@ -146,11 +57,37 @@ export default function Courses() {
   };
 
   const handleDropCourse = (courseId: string) => {
-    // Basic confirmation inline for demo, could be a dialog
     if(window.confirm("Are you sure you want to drop this course?")) {
-      setEnrolledCourseIds(prev => prev.filter(id => id !== courseId));
+      // Mock dropping logic
     }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6 max-w-6xl mx-auto">
+        <div>
+          <div className="h-8 bg-muted rounded w-64 mb-2 animate-pulse"></div>
+          <div className="h-4 bg-muted rounded w-96 animate-pulse"></div>
+        </div>
+        <div className="h-10 bg-muted rounded w-64 animate-pulse"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <div className="h-64 bg-muted rounded-xl animate-pulse"></div>
+          <div className="h-64 bg-muted rounded-xl animate-pulse"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6 max-w-6xl mx-auto">
+        <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-lg flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -231,9 +168,20 @@ export default function Courses() {
             />
           </div>
 
+          {catalog.length === 0 ? (
+            <Card className="border-dashed shadow-none bg-transparent mt-6">
+              <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+                <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4">
+                  <BookOpen className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-xl font-serif font-semibold text-foreground mb-2">No courses available yet</h3>
+                <p className="text-muted-foreground max-w-sm">Please check back soon.</p>
+              </CardContent>
+            </Card>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredCatalog.map(course => {
-              const isEnrolled = enrolledCourseIds.includes(course.id);
+              const isEnrolled = false; // Mock as false for now
               const isFull = course.enrolled >= course.capacity;
 
               return (
@@ -303,6 +251,7 @@ export default function Courses() {
               </div>
             )}
           </div>
+          )}
         </TabsContent>
       </Tabs>
 
