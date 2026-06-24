@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer, setDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp, getDocFromServer } from 'firebase/firestore';
 
 const firebaseConfig = {
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -31,24 +31,24 @@ export async function testConnection() {
 export async function signIn() {
   try {
     const result = await signInWithPopup(auth, googleProvider);
-    // Bootstraps user document on first sign in
     const userRef = doc(db, 'users', result.user.uid);
-    try {
-      await getDocFromServer(userRef);
-    } catch {
-      // Missing or insufficient permissions likely thrown because it lacks existence. 
-      // Safe create fallback if it doesn't exist
-      try {
-        await setDoc(userRef, {
-          name: result.user.displayName || 'Unknown',
-          email: result.user.email,
-          role: 'student',
-          createdAt: serverTimestamp()
-        });
-      } catch (err) {
-        console.warn("Attempted to bootstrap user profile but failed or already exists:", err);
-      }
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        name: result.user.displayName || '',
+        email: result.user.email || '',
+        role: 'student',
+        gpa: 0,
+        attendance: 0,
+        courses: [],
+        enrolledCourseIds: [],
+        schedule: [],
+        tasks: [],
+        createdAt: serverTimestamp(),
+      });
     }
+
     return result.user;
   } catch (error) {
     console.error("Authentication Error:", error);
@@ -69,11 +69,11 @@ export interface FirestoreErrorInfo {
     email: string | null;
     emailVerified: boolean;
     isAnonymous: boolean;
-    providerInfo: any[];
+    providerInfo: object[];
   }
 }
 
-export function handleFirestoreError(error: any, operationType: 'create' | 'update' | 'delete' | 'list' | 'get' | 'write', path: string | null) {
+export function handleFirestoreError(error: unknown, operationType: 'create' | 'update' | 'delete' | 'list' | 'get' | 'write', path: string | null) {
   if (error instanceof Error && error.message.includes('Missing or insufficient permissions')) {
     const errorInfo: FirestoreErrorInfo = {
       error: error.message,
