@@ -10,6 +10,7 @@ import { MainLayout } from './components/MainLayout';
 import { PortalLayout } from './components/PortalLayout';
 import { FullPageSpinner } from './components/FullPageSpinner';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { LanguageProvider } from './context/LanguageContext';
 
 const Home = React.lazy(() => import('./pages/Home'));
 const Admissions = React.lazy(() => import('./pages/Admissions'));
@@ -24,9 +25,10 @@ const Alumni = React.lazy(() => import('./pages/Alumni'));
 
 export default function App() {
   return (
-    <Router>
-      <ScrollToTop />
-      <Suspense fallback={<FullPageSpinner />}>
+    <LanguageProvider>
+      <Router>
+        <ScrollToTop />
+        <Suspense fallback={<FullPageSpinner />}>
         <Routes>
           {/* Public Website Routes */}
           <Route element={<MainLayout />}>
@@ -55,6 +57,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
-    </Router>
+      </Router>
+    </LanguageProvider>
   );
 }
