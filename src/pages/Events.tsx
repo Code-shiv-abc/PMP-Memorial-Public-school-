@@ -28,7 +28,7 @@ export default function Events() {
           {events.map((event, i) => (
             <div key={i} className="bg-background rounded-2xl overflow-hidden border border-border group hover:shadow-xl transition-shadow">
               <div className="h-48 overflow-hidden relative">
-                <img src={event.img} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img src={event.img} alt={event.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <Badge className="absolute top-4 left-4 bg-card/90 text-foreground border-none hover:bg-card">{event.type}</Badge>
               </div>
               <div className="p-6">
