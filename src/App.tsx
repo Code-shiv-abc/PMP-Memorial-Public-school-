@@ -11,6 +11,7 @@ import { PortalLayout } from './components/PortalLayout';
 import { FullPageSpinner } from './components/FullPageSpinner';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LanguageProvider } from './context/LanguageContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const Home = React.lazy(() => import('./pages/Home'));
 const Admissions = React.lazy(() => import('./pages/Admissions'));
@@ -25,11 +26,12 @@ const Alumni = React.lazy(() => import('./pages/Alumni'));
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <Router>
-        <ScrollToTop />
-        <Suspense fallback={<FullPageSpinner />}>
-        <Routes>
+    <ErrorBoundary>
+      <LanguageProvider>
+        <Router>
+          <ScrollToTop />
+          <Suspense fallback={<FullPageSpinner />}>
+            <Routes>
           {/* Public Website Routes */}
           <Route element={<MainLayout />}>
             <Route path="/" element={<Home />} />
@@ -53,11 +55,12 @@ export default function App() {
             </Route>
           </Route>
 
-          {/* Fallback route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-      </Router>
-    </LanguageProvider>
+              {/* Fallback route */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </Router>
+      </LanguageProvider>
+    </ErrorBoundary>
   );
 }
