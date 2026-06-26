@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { sanityClient } from '@/src/lib/sanity';
 import { Course } from '@/src/types/course';
+import toast from 'react-hot-toast';
+import { useLanguage } from '@/src/context/LanguageContext';
 
 interface UseCoursesReturn {
   data: Course[];
@@ -9,6 +11,7 @@ interface UseCoursesReturn {
 }
 
 export function useCourses(): UseCoursesReturn {
+  const { t } = useLanguage();
   const [data, setData] = useState<Course[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +31,7 @@ export function useCourses(): UseCoursesReturn {
         setData(courses || []);
         setError(null);
       } catch (err) {
-        console.error("Failed to fetch courses from Sanity:", err);
+        toast.error(t('failedLoadCourses'));
         setError("Failed to load courses. Please try again later.");
         setData([]);
       } finally {

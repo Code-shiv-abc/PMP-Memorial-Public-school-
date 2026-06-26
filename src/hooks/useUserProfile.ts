@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { UserProfile } from '@/src/types/user';
+import toast from 'react-hot-toast';
+import { useLanguage } from '@/src/context/LanguageContext';
 
 interface UseUserProfileReturn {
   data: UserProfile | null;
@@ -10,6 +12,7 @@ interface UseUserProfileReturn {
 }
 
 export function useUserProfile(): UseUserProfileReturn {
+  const { t } = useLanguage();
   const [data, setData] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +54,7 @@ export function useUserProfile(): UseUserProfileReturn {
             setLoading(false);
           },
           (err) => {
-            console.error("Error fetching user profile:", err);
+            toast.error(t('failedLoadProfile'));
             setError("An error occurred while fetching your profile.");
             setLoading(false);
           }
