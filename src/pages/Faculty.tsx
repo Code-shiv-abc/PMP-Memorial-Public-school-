@@ -95,6 +95,7 @@ export default function Faculty() {
                 <img 
                   src={faculty.image} 
                   alt={faculty.name}
+                  loading="lazy"
                   className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
