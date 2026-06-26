@@ -12,6 +12,7 @@ import { FullPageSpinner } from './components/FullPageSpinner';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LanguageProvider } from './context/LanguageContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { Toaster } from 'react-hot-toast';
 
 const Home = React.lazy(() => import('./pages/Home'));
 const Admissions = React.lazy(() => import('./pages/Admissions'));
@@ -28,6 +29,17 @@ export default function App() {
   return (
     <ErrorBoundary>
       <LanguageProvider>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: '#1a1a2e',
+              color: '#ffffff',
+              border: '1px solid #D4AF37',
+            },
+            duration: 4000,
+          }}
+        />
         <Router>
           <ScrollToTop />
           <Suspense fallback={<FullPageSpinner />}>

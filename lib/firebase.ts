@@ -1,6 +1,9 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp, getDocFromServer } from 'firebase/firestore';
+import toast from 'react-hot-toast';
+import { en } from '../src/translations/en';
+import { hi } from '../src/translations/hi';
 
 const firebaseConfig = {
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -29,6 +32,8 @@ export async function testConnection() {
 }
 
 export async function signIn() {
+  const lang = localStorage.getItem('pmp_language') || 'en';
+  const translations = lang === 'hi' ? hi : en;
   try {
     const result = await signInWithPopup(auth, googleProvider);
     const userRef = doc(db, 'users', result.user.uid);
@@ -51,7 +56,7 @@ export async function signIn() {
 
     return result.user;
   } catch (error) {
-    console.error("Authentication Error:", error);
+    toast.error(translations.failedSignIn);
     throw error;
   }
 }
