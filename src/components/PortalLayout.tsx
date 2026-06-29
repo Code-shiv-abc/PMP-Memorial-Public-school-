@@ -11,7 +11,8 @@ import {
   User,
   Menu,
   X,
-  Loader2
+  Loader2,
+  Bot
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -52,6 +53,7 @@ export function PortalLayout() {
     { icon: BookOpen, label: "My Courses", path: "/portal/courses" },
     { icon: FileText, label: "Assignments", path: "/portal/assignments" },
     { icon: CalendarIcon, label: "Schedule", path: "/portal/schedule" },
+    { icon: Bot, label: "Study Assistant", path: "/portal/study-assistant" },
     { icon: Settings, label: "Settings", path: "/portal/settings" },
   ];
 

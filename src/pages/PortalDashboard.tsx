@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Calendar, Clock, ArrowRight, Award, CheckCircle, Sparkles, TrendingUp, AlertCircle } from "lucide-react";
+import { FileText, Calendar, Clock, ArrowRight, Award, CheckCircle, Sparkles, TrendingUp, AlertCircle, Bot } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import { useUserProfile } from "@/src/hooks/useUserProfile";
+import { Link } from "react-router-dom";
 
 export default function PortalDashboard() {
   const currentUser = auth.currentUser;
@@ -60,6 +61,32 @@ export default function PortalDashboard() {
         <h1 className="text-2xl font-serif font-bold text-foreground">Welcome back, {firstName}!</h1>
         <p className="text-muted-foreground">Here's what's happening with your courses today.</p>
       </div>
+
+      {/* AI Study Assistant Shortcut */}
+      <Card className="bg-gradient-to-r from-[#1a1a2e] to-[#0F1115] border border-[#D4AF37]/20 shadow-lg relative overflow-hidden">
+        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-[#D4AF37]/10 to-transparent pointer-events-none"></div>
+        <div className="absolute -right-10 -top-10 opacity-5 pointer-events-none">
+           <Bot className="w-48 h-48 text-[#D4AF37]" />
+        </div>
+        <CardContent className="p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 relative z-10">
+          <div className="w-16 h-16 bg-[#D4AF37]/20 rounded-2xl flex items-center justify-center shrink-0 border border-[#D4AF37]/30 shadow-inner">
+            <Bot className="w-8 h-8 text-[#D4AF37]" />
+          </div>
+          <div className="flex-1 text-center md:text-left">
+            <h3 className="font-serif font-bold text-white mb-2 text-xl">AI Study Assistant</h3>
+            <p className="text-gray-400 text-sm leading-relaxed max-w-2xl">
+              Get personalized help with your enrolled courses. Ask questions, clarify concepts, and review materials with your bilingual AI tutor.
+            </p>
+          </div>
+          <div className="shrink-0 w-full md:w-auto mt-4 md:mt-0">
+            <Link to="/portal/study-assistant">
+              <Button className="w-full md:w-auto bg-[#D4AF37] hover:bg-[#b5952f] text-[#0F1115] font-semibold gap-2 border-none">
+                Open Assistant <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Personalized AI Insight Feature */}
       {hasCourses && lowestCourse && (

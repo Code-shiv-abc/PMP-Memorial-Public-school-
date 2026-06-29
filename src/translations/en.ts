@@ -33,4 +33,14 @@ export const en = {
   alumni: "Alumni",
   library: "Library",
   portal: "Student Portal",
+
+  // Study Assistant
+  studyAssistant: "Study Assistant",
+  askQuestion: "Ask a question about your courses...",
+  send: "Send",
+  clearChat: "Clear Chat",
+  thinking: "Thinking...",
+  errorAI: "Failed to get a response. Please try again.",
+  noCoursesAI: "Please enroll in courses to use the Study Assistant.",
+  welcomeAI: "Hi! I am your Study Assistant. Ask me anything about your enrolled courses.",
 };
