@@ -19,6 +19,7 @@ const Admissions = React.lazy(() => import('./pages/Admissions'));
 const DigitalLibrary = React.lazy(() => import('./pages/DigitalLibrary'));
 const PortalDashboard = React.lazy(() => import('./pages/PortalDashboard'));
 const Courses = React.lazy(() => import('./pages/Courses'));
+const StudyAssistant = React.lazy(() => import('./pages/StudyAssistant'));
 const About = React.lazy(() => import('./pages/About'));
 const Faculty = React.lazy(() => import('./pages/Faculty'));
 const Academics = React.lazy(() => import('./pages/Academics'));
@@ -63,6 +64,7 @@ export default function App() {
               <Route path="courses" element={<Courses />} />
               <Route path="assignments" element={<div className="p-8 text-center"><h2 className="text-2xl font-serif font-bold">Assignments</h2></div>} />
               <Route path="schedule" element={<div className="p-8 text-center"><h2 className="text-2xl font-serif font-bold">My Schedule</h2></div>} />
+              <Route path="study-assistant" element={<StudyAssistant />} />
               <Route path="settings" element={<div className="p-8 text-center"><h2 className="text-2xl font-serif font-bold">Account Settings</h2></div>} />
             </Route>
           </Route>
