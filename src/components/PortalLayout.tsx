@@ -23,8 +23,10 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { auth, logOut } from "@/lib/firebase";
 import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { useLanguage } from "@/src/context/LanguageContext";
 
 export function PortalLayout() {
+  const { t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -49,12 +51,12 @@ export function PortalLayout() {
   };
 
   const sidebarItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/portal" },
-    { icon: BookOpen, label: "My Courses", path: "/portal/courses" },
-    { icon: FileText, label: "Assignments", path: "/portal/assignments" },
-    { icon: CalendarIcon, label: "Schedule", path: "/portal/schedule" },
-    { icon: Bot, label: "Study Assistant", path: "/portal/study-assistant" },
-    { icon: Settings, label: "Settings", path: "/portal/settings" },
+    { icon: LayoutDashboard, label: t('dashboard'), path: "/portal" },
+    { icon: BookOpen, label: t('myCourses'), path: "/portal/courses" },
+    { icon: FileText, label: t('assignments'), path: "/portal/assignments" },
+    { icon: CalendarIcon, label: t('schedule'), path: "/portal/schedule" },
+    { icon: Bot, label: t('studyAssistant'), path: "/portal/study-assistant" },
+    { icon: Settings, label: t('settings'), path: "/portal/settings" },
   ];
 
   const SidebarContent = () => (

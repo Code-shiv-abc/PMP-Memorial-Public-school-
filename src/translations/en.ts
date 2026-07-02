@@ -43,4 +43,16 @@ export const en = {
   errorAI: "Failed to get a response. Please try again.",
   noCoursesAI: "Please enroll in courses to use the Study Assistant.",
   welcomeAI: "Hi! I am your Study Assistant. Ask me anything about your enrolled courses.",
+
+  // Dashboard / Sidebar
+  dashboard: "Dashboard",
+  myCourses: "My Courses",
+  assignments: "Assignments",
+  schedule: "Schedule",
+  settings: "Settings",
+
+  // Portal Dashboard
+  aiShortcutTitle: "AI Study Assistant",
+  aiShortcutDesc: "Get personalized help with your enrolled courses. Ask questions, clarify concepts, and review materials with your bilingual AI tutor.",
+  openAssistant: "Open Assistant",
 };

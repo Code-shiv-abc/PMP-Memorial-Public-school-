@@ -5,8 +5,10 @@ import { FileText, Calendar, Clock, ArrowRight, Award, CheckCircle, Sparkles, Tr
 import { auth } from "@/lib/firebase";
 import { useUserProfile } from "@/src/hooks/useUserProfile";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/src/context/LanguageContext";
 
 export default function PortalDashboard() {
+  const { t } = useLanguage();
   const currentUser = auth.currentUser;
   const { data: userData, loading, error } = useUserProfile();
 
@@ -73,15 +75,15 @@ export default function PortalDashboard() {
             <Bot className="w-8 h-8 text-[#D4AF37]" />
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h3 className="font-serif font-bold text-white mb-2 text-xl">AI Study Assistant</h3>
+            <h3 className="font-serif font-bold text-white mb-2 text-xl">{t('aiShortcutTitle')}</h3>
             <p className="text-gray-400 text-sm leading-relaxed max-w-2xl">
-              Get personalized help with your enrolled courses. Ask questions, clarify concepts, and review materials with your bilingual AI tutor.
+              {t('aiShortcutDesc')}
             </p>
           </div>
           <div className="shrink-0 w-full md:w-auto mt-4 md:mt-0">
             <Link to="/portal/study-assistant">
               <Button className="w-full md:w-auto bg-[#D4AF37] hover:bg-[#b5952f] text-[#0F1115] font-semibold gap-2 border-none">
-                Open Assistant <ArrowRight className="w-4 h-4" />
+                {t('openAssistant')} <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
           </div>
