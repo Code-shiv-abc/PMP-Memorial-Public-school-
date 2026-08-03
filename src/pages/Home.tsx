@@ -42,13 +42,6 @@ export default function Home() {
             variants={stagger}
             className="max-w-4xl"
           >
-            <motion.div variants={fadeIn} className="flex items-center gap-4 mb-8">
-              <Badge variant="outline" className="border-primary/30 text-primary uppercase tracking-[0.2em] font-medium px-4 py-2 bg-primary/5 backdrop-blur-sm shadow-2xl">
-                Est. 1996
-              </Badge>
-              <div className="h-[1px] w-12 bg-primary/30" />
-            </motion.div>
-            
             <motion.h1 variants={fadeIn} className="text-6xl md:text-8xl lg:text-[7.5rem] font-serif font-medium text-foreground mb-8 leading-[1.05] tracking-tight">
               Shaping <br/>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/50 italic pr-4">Tomorrow's</span>
@@ -56,7 +49,9 @@ export default function Home() {
             </motion.h1>
             
             <motion.p variants={fadeIn} className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl leading-relaxed font-light">
-              P.M.P. Memorial Public School provides a transformative educational experience fostering academic excellence and character.
+              Shahpur, Gonda, Uttar Pradesh —<br />
+              क्षेत्र का सबसे विश्वसनीय शिक्षा का केन्द्र<br />
+              The most trusted education center in the region.
             </motion.p>
             
             <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
@@ -98,27 +93,27 @@ export default function Home() {
               {/* Box 1 */}
               <div className="md:col-span-2 bg-card p-10 lg:p-14 border border-border/50 flex flex-col justify-end min-h-[320px] group hover:border-primary/30 transition-colors">
                  <div className="text-secondary/20 mb-auto"><Trophy className="w-12 h-12" /></div>
-                 <h3 className="text-5xl md:text-6xl font-serif text-foreground mb-4 font-medium">100%</h3>
-                 <p className="text-muted-foreground uppercase tracking-[0.2em] text-sm font-semibold">Board Pass Rate</p>
+                 <h3 className="text-5xl md:text-6xl font-serif text-foreground mb-4 font-medium">98%</h3>
+                 <p className="text-muted-foreground uppercase tracking-[0.2em] text-sm font-semibold">Parent Satisfaction</p>
               </div>
 
               {/* Box 2 (Stacked) */}
               <div className="grid grid-rows-2 gap-4 md:col-span-1">
                  <div className="bg-card p-8 border border-border/50 flex flex-col justify-center group hover:border-primary/30 transition-colors">
-                    <h3 className="text-4xl font-serif text-foreground mb-2 font-medium">25+</h3>
-                    <p className="text-muted-foreground uppercase tracking-[0.2em] text-[10px] font-semibold">Years Legacy</p>
+                    <h3 className="text-4xl font-serif text-foreground mb-2 font-medium">3-12</h3>
+                    <p className="text-muted-foreground uppercase tracking-[0.2em] text-[10px] font-semibold">Hindi Medium Classes</p>
                  </div>
                  <div className="bg-primary p-8 border border-primary flex flex-col justify-center">
-                    <h3 className="text-4xl font-serif text-primary-foreground mb-2 font-medium">50+</h3>
-                    <p className="text-primary-foreground/80 uppercase tracking-[0.2em] text-[10px] font-semibold">Expert Faculty</p>
+                    <h3 className="text-4xl font-serif text-primary-foreground mb-2 font-medium">PG-8</h3>
+                    <p className="text-primary-foreground/80 uppercase tracking-[0.2em] text-[10px] font-semibold">English Medium Classes</p>
                  </div>
               </div>
 
               {/* Box 3 */}
               <div className="md:col-span-1 bg-card p-10 border border-border/50 flex flex-col justify-end min-h-[320px] group hover:border-primary/30 transition-colors">
                  <div className="text-secondary/20 mb-auto"><Users className="w-12 h-12" /></div>
-                 <h3 className="text-5xl font-serif text-foreground mb-4 font-medium">20k+</h3>
-                 <p className="text-muted-foreground uppercase tracking-[0.2em] text-sm font-semibold">Global Alumni</p>
+                 <h3 className="text-5xl font-serif text-foreground mb-4 font-medium">Free</h3>
+                 <p className="text-muted-foreground uppercase tracking-[0.2em] text-sm font-semibold">Computer Education</p>
               </div>
            </motion.div>
         </div>
@@ -186,69 +181,16 @@ export default function Home() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            {/* Notices List */}
-            <div className="lg:col-span-7">
-               <div className="border-t border-border/50">
-                  {[
-                    { tag: "Academic", title: "Class 10 & 12 Pre-board Examination Schedule", date: "Apr 15" }, 
-                    { tag: "Admission", title: "Admissions Open for Academic Session 2026-27", date: "Apr 12" },
-                    { tag: "Transport", title: "Revised Bus Guidelines & Routes - Effective Immediately", date: "Apr 10" },
-                  ].map((notice, i) => (
-                    <motion.div 
-                      key={i} 
-                      initial={{ opacity: 0, y: 10 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.1 }}
-                      className="py-8 border-b border-border/50 group cursor-pointer flex flex-col sm:flex-row gap-6 justify-between items-start sm:items-center hover:bg-card/50 transition-colors px-4 -mx-4"
-                    >
-                       <div className="flex-1">
-                          <span className="text-[10px] text-primary uppercase tracking-[0.2em] font-bold mb-3 block">{notice.tag}</span>
-                          <h3 className="text-xl font-serif text-foreground group-hover:text-primary transition-colors leading-tight max-w-md">{notice.title}</h3>
-                       </div>
-                       <div className="flex items-center justify-between w-full sm:w-auto gap-8 mt-4 sm:mt-0">
-                          <span className="text-sm text-muted-foreground font-light">{notice.date}</span>
-                          <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                             <ArrowUpRight className="w-4 h-4" />
-                          </div>
-                       </div>
-                    </motion.div>
-                  ))}
-               </div>
+          <div className="grid grid-cols-1 gap-12">
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">
+                Announcements coming soon. Check back for
+                updates from PMP Memorial Public School.
+              </p>
+              <p className="text-[#D4AF37]/60 text-sm mt-2">
+                Contact: Sunil Kumar Tiwari — 9792954343
+              </p>
             </div>
-
-            {/* Upcoming Event Feature */}
-            <motion.div 
-               initial={{ opacity: 0, x: 20 }}
-               whileInView={{ opacity: 1, x: 0 }}
-               viewport={{ once: true }}
-               className="lg:col-span-5 bg-card p-10 border border-border/50 relative overflow-hidden group"
-            >
-               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511629091441-ee46146481b6?auto=format&fit=crop&q=80&w=2070')] bg-cover bg-center opacity-10 transition-opacity duration-700 group-hover:opacity-20" />
-               <div className="relative z-10 h-full flex flex-col">
-                 <div className="flex items-center gap-3 mb-12">
-                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                   <span className="text-xs uppercase tracking-[0.2em] font-medium">Upcoming Exhibition</span>
-                 </div>
-                 
-                 <div className="mt-auto">
-                    <h3 className="text-3xl font-serif text-foreground mb-4">Annual Science & Tech Symposium</h3>
-                    <p className="text-muted-foreground font-light mb-8">Join us for a showcase of student innovation, robotics, and advanced scientific paradigms.</p>
-                    
-                    <div className="grid grid-cols-2 gap-6 border-t border-border/50 pt-6">
-                       <div>
-                         <span className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] block mb-1">Date</span>
-                         <span className="font-serif text-lg">April 25, 2026</span>
-                       </div>
-                       <div>
-                         <span className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] block mb-1">Time</span>
-                         <span className="font-serif text-lg">10:00 AM</span>
-                       </div>
-                    </div>
-                 </div>
-               </div>
-            </motion.div>
           </div>
         </div>
       </section>

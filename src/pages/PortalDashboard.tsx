@@ -114,6 +114,19 @@ export default function PortalDashboard() {
         </div>
       )}
 
+      <div className="w-full bg-[#1a1a2e] border border-[#D4AF37]/20 rounded-xl py-8 px-6 text-center">
+        <p className="text-[#D4AF37] text-lg font-serif leading-relaxed">
+          उद्यमेन हि सिध्यन्ति कार्याणि न मनोरथैः।<br />
+          न हि सुप्तस्य सिंहस्य प्रविशन्ति मुखे मृगाः॥
+        </p>
+        <p className="text-gray-400 text-sm italic mt-3">
+          "Goals are achieved through effort, not mere wishes. Even a lion gets no prey while sleeping."
+        </p>
+        <p className="text-[#D4AF37]/60 text-xs mt-2">
+          — Sanskrit Proverb
+        </p>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="border-none shadow-sm shadow-none">
