@@ -25,10 +25,9 @@ export function MainLayout() {
     setIsLoggingIn(true);
     try {
       await signIn();
-      navigate('/portal');
+      // Will redirect page, no need to navigate manually
     } catch (error) {
       console.error("Login failed:", error);
-    } finally {
       setIsLoggingIn(false);
     }
   };

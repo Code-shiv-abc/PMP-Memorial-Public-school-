@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp, getDocFromServer } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { en } from '../src/translations/en';
@@ -31,31 +31,34 @@ export async function testConnection() {
 }
 
 export async function signIn() {
-  const lang = localStorage.getItem('pmp_language') || 'en';
-  const translations = lang === 'hi' ? hi : en;
+  await signInWithRedirect(auth, googleProvider);
+}
+
+export async function handleRedirectResult() {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const userRef = doc(db, 'users', result.user.uid);
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-      await setDoc(userRef, {
-        name: result.user.displayName || '',
-        email: result.user.email || '',
-        role: 'student',
-        gpa: 0,
-        attendance: 0,
-        courses: [],
-        enrolledCourseIds: [],
-        schedule: [],
-        tasks: [],
-        createdAt: serverTimestamp(),
-      });
+    const result = await getRedirectResult(auth);
+    if (result) {
+      const userRef = doc(db, 'users', result.user.uid);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          name: result.user.displayName || '',
+          email: result.user.email || '',
+          role: 'student',
+          gpa: 0,
+          attendance: 0,
+          courses: [],
+          enrolledCourseIds: [],
+          schedule: [],
+          tasks: [],
+          createdAt: serverTimestamp(),
+        });
+      }
+      return result.user;
     }
-
-    return result.user;
+    return null;
   } catch (error) {
-    toast.error(translations.failedSignIn);
+    toast.error('Failed to sign in. Please try again.');
     throw error;
   }
 }
