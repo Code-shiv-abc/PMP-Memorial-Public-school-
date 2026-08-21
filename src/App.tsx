@@ -7,7 +7,8 @@ import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ScrollToTop } from './components/ScrollToTop';
 import { MainLayout } from './components/MainLayout';
-import { handleRedirectResult } from '../lib/firebase';
+import { handleRedirectResult, auth, checkAndCreateUserDoc } from '../lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import { PortalLayout } from './components/PortalLayout';
 import { FullPageSpinner } from './components/FullPageSpinner';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -33,12 +34,31 @@ export default function App() {
       .then((user) => {
         console.log('Redirect result user:', user);
         if (user) {
+          if (sessionStorage.getItem('isLoggingIn') === 'true') {
+            sessionStorage.removeItem('isLoggingIn');
+          }
           window.location.href = '/portal';
         }
       })
       .catch((error) => {
         console.error('Redirect result error:', error);
       });
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          await checkAndCreateUserDoc(user);
+          if (sessionStorage.getItem('isLoggingIn') === 'true') {
+            sessionStorage.removeItem('isLoggingIn');
+            window.location.href = '/portal';
+          }
+        } catch (error) {
+          console.error("Error creating user doc:", error);
+        }
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return (

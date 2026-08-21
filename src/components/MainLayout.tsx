@@ -4,14 +4,23 @@ import { GraduationCap, Menu, X, ArrowRight, LogIn, Loader2 } from "lucide-react
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
-import { signIn } from "@/lib/firebase";
+import { signIn, auth } from "@/lib/firebase";
+import { onAuthStateChanged, User } from "firebase/auth";
 
 export function MainLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,8 +31,14 @@ export function MainLayout() {
   }, []);
 
   const handleLogin = async () => {
+    if (user) {
+      navigate('/portal');
+      return;
+    }
+
     setIsLoggingIn(true);
     try {
+      sessionStorage.setItem('isLoggingIn', 'true');
       await signIn();
       // Will redirect page, no need to navigate manually
     } catch (error) {
@@ -55,7 +70,7 @@ export function MainLayout() {
             className="hover:text-primary transition-colors flex items-center gap-2 disabled:opacity-50"
           >
             {isLoggingIn ? <Loader2 className="w-3 h-3 animate-spin" /> : <LogIn className="w-3 h-3" />}
-            Portal Access
+            {user ? 'Go to Portal' : 'Portal Access'}
           </button>
         </div>
       </div>
