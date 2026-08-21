@@ -5,11 +5,17 @@ import toast from 'react-hot-toast';
 import { en } from '../src/translations/en';
 import { hi } from '../src/translations/hi';
 
+const configuredAuthDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
+// Fallback to .web.app instead of .firebaseapp.com to fix 404 init.json issue on redirect
+const authDomain = configuredAuthDomain?.includes('.firebaseapp.com')
+  ? configuredAuthDomain.replace('.firebaseapp.com', '.web.app')
+  : configuredAuthDomain;
+
 const firebaseConfig = {
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  authDomain: authDomain,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
