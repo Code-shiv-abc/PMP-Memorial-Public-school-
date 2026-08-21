@@ -3,12 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ScrollToTop } from './components/ScrollToTop';
 import { MainLayout } from './components/MainLayout';
-import { handleRedirectResult, auth, checkUserDocExists } from '../lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import { PortalLayout } from './components/PortalLayout';
 import { FullPageSpinner } from './components/FullPageSpinner';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -30,63 +28,6 @@ const Events = React.lazy(() => import('./pages/Events'));
 const Alumni = React.lazy(() => import('./pages/Alumni'));
 
 export default function App() {
-  useEffect(() => {
-    handleRedirectResult()
-      .then(async (user) => {
-        console.log('Redirect result user:', user);
-        if (user) {
-          if (sessionStorage.getItem('isLoggingIn') === 'true') {
-            sessionStorage.removeItem('isLoggingIn');
-          }
-          const hasRole = await checkUserDocExists(user);
-          if (hasRole) {
-            window.location.href = '/portal';
-          } else {
-            window.location.href = '/select-role';
-          }
-        } else if (sessionStorage.getItem('isLoggingIn') === 'true') {
-           // We might still be waiting for onAuthStateChanged to fire
-           // Or the redirect failed. Don't remove the flag yet.
-           console.log('No user from redirect, falling back to onAuthStateChanged...');
-        }
-      })
-      .catch((error) => {
-        console.error('Redirect result error:', error);
-        if (sessionStorage.getItem('isLoggingIn') === 'true') {
-          sessionStorage.removeItem('isLoggingIn');
-        }
-      });
-
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          const hasRole = await checkUserDocExists(user);
-          if (sessionStorage.getItem('isLoggingIn') === 'true') {
-            sessionStorage.removeItem('isLoggingIn');
-            if (hasRole) {
-              window.location.href = '/portal';
-            } else {
-              window.location.href = '/select-role';
-            }
-          }
-        } catch (error) {
-          console.error("Error checking user doc:", error);
-        }
-      } else {
-        // If there's definitively no user and we were logging in, clear the flag eventually
-        // so the UI isn't stuck loading forever.
-        setTimeout(() => {
-           if (sessionStorage.getItem('isLoggingIn') === 'true') {
-             sessionStorage.removeItem('isLoggingIn');
-             console.log('Cleared login state after timeout with no user.');
-           }
-        }, 5000);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
   return (
     <ErrorBoundary>
       <LanguageProvider>
