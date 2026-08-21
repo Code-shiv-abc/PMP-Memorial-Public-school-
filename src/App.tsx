@@ -31,11 +31,14 @@ export default function App() {
   useEffect(() => {
     handleRedirectResult()
       .then((user) => {
+        console.log('Redirect result user:', user);
         if (user) {
           window.location.href = '/portal';
         }
       })
-      .catch(console.error);
+      .catch((error) => {
+        console.error('Redirect result error:', error);
+      });
   }, []);
 
   return (
