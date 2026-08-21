@@ -26,6 +26,9 @@ export default function Admissions() {
         <div className="text-center mb-12">
           <Badge className="mb-4">Admissions Open 2026-2027</Badge>
           <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground mb-4">Online Admission Application</h1>
+          <p className="text-xl text-[#D4AF37] font-serif mt-2 mb-4">
+            प्रवेश प्रारम्भ — 01 अप्रैल से
+          </p>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Join the legacy of excellence at P.M.P. Memorial Public School. Please fill out the form below to begin the application process.
           </p>

@@ -42,16 +42,21 @@ export default function Home() {
             variants={stagger}
             className="max-w-4xl"
           >
-            <motion.h1 variants={fadeIn} className="text-6xl md:text-8xl lg:text-[7.5rem] font-serif font-medium text-foreground mb-8 leading-[1.05] tracking-tight">
-              Shaping <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/50 italic pr-4">Tomorrow's</span>
-              <br/> Leaders.
+            <motion.h1 variants={fadeIn} className="text-6xl md:text-8xl lg:text-[7.5rem] font-serif font-medium text-foreground mb-4 leading-[1.05] tracking-tight">
+              PMP Memorial<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/50 italic pr-4">Public School</span>
             </motion.h1>
-            
-            <motion.p variants={fadeIn} className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl leading-relaxed font-light">
-              Shahpur, Gonda, Uttar Pradesh —<br />
-              क्षेत्र का सबसे विश्वसनीय शिक्षा का केन्द्र<br />
-              The most trusted education center in the region.
+
+            <motion.p variants={fadeIn} className="text-2xl font-serif text-[#D4AF37] mb-2">
+              पी.एम.पी. मेमोरियल पब्लिक स्कूल, शाहपुर-गोंडा
+            </motion.p>
+
+            <motion.p variants={fadeIn} className="text-xl text-muted-foreground mb-2">
+              Shahpur, Gonda, Uttar Pradesh
+            </motion.p>
+
+            <motion.p variants={fadeIn} className="text-lg text-[#D4AF37]/80 italic mb-8">
+              क्षेत्र का सबसे विश्वसनीय शिक्षा का केन्द्र
             </motion.p>
             
             <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
