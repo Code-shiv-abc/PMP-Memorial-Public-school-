@@ -34,33 +34,42 @@ export async function signIn() {
   await signInWithRedirect(auth, googleProvider);
 }
 
+export async function checkAndCreateUserDoc(user: any) {
+  const userRef = doc(db, 'users', user.uid);
+  const userSnap = await getDoc(userRef);
+  if (!userSnap.exists()) {
+    await setDoc(userRef, {
+      name: user.displayName || '',
+      email: user.email || '',
+      role: 'student',
+      gpa: 0,
+      attendance: 0,
+      courses: [],
+      enrolledCourseIds: [],
+      schedule: [],
+      tasks: [],
+      createdAt: serverTimestamp(),
+    });
+  }
+}
+
+let redirectResultPromise: Promise<any> | null = null;
+
 export async function handleRedirectResult() {
   try {
-    console.log('Checking redirect result...')
-    const result = await getRedirectResult(auth);
-    console.log('Redirect result:', result)
+    console.log('Checking redirect result...');
+    if (!redirectResultPromise) {
+      redirectResultPromise = getRedirectResult(auth);
+    }
+    const result = await redirectResultPromise;
+    console.log('Redirect result:', result);
     if (result) {
-      const userRef = doc(db, 'users', result.user.uid);
-      const userSnap = await getDoc(userRef);
-      if (!userSnap.exists()) {
-        await setDoc(userRef, {
-          name: result.user.displayName || '',
-          email: result.user.email || '',
-          role: 'student',
-          gpa: 0,
-          attendance: 0,
-          courses: [],
-          enrolledCourseIds: [],
-          schedule: [],
-          tasks: [],
-          createdAt: serverTimestamp(),
-        });
-      }
+      await checkAndCreateUserDoc(result.user);
       return result.user;
     }
     return null;
   } catch (error) {
-    console.error('Redirect error:', error)
+    console.error('Redirect error:', error);
     toast.error('Failed to sign in. Please try again.');
     throw error;
   }
