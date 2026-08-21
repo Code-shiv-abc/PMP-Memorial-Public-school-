@@ -36,7 +36,9 @@ export async function signIn() {
 
 export async function handleRedirectResult() {
   try {
+    console.log('Checking redirect result...')
     const result = await getRedirectResult(auth);
+    console.log('Redirect result:', result)
     if (result) {
       const userRef = doc(db, 'users', result.user.uid);
       const userSnap = await getDoc(userRef);
@@ -58,6 +60,7 @@ export async function handleRedirectResult() {
     }
     return null;
   } catch (error) {
+    console.error('Redirect error:', error)
     toast.error('Failed to sign in. Please try again.');
     throw error;
   }
