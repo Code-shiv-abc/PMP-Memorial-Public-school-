@@ -44,10 +44,17 @@ export default function App() {
           } else {
             window.location.href = '/select-role';
           }
+        } else if (sessionStorage.getItem('isLoggingIn') === 'true') {
+           // We might still be waiting for onAuthStateChanged to fire
+           // Or the redirect failed. Don't remove the flag yet.
+           console.log('No user from redirect, falling back to onAuthStateChanged...');
         }
       })
       .catch((error) => {
         console.error('Redirect result error:', error);
+        if (sessionStorage.getItem('isLoggingIn') === 'true') {
+          sessionStorage.removeItem('isLoggingIn');
+        }
       });
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -65,6 +72,15 @@ export default function App() {
         } catch (error) {
           console.error("Error checking user doc:", error);
         }
+      } else {
+        // If there's definitively no user and we were logging in, clear the flag eventually
+        // so the UI isn't stuck loading forever.
+        setTimeout(() => {
+           if (sessionStorage.getItem('isLoggingIn') === 'true') {
+             sessionStorage.removeItem('isLoggingIn');
+             console.log('Cleared login state after timeout with no user.');
+           }
+        }, 5000);
       }
     });
 
