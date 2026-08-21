@@ -7,7 +7,7 @@ import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ScrollToTop } from './components/ScrollToTop';
 import { MainLayout } from './components/MainLayout';
-import { handleRedirectResult, auth, checkAndCreateUserDoc } from '../lib/firebase';
+import { handleRedirectResult, auth, checkUserDocExists } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { PortalLayout } from './components/PortalLayout';
 import { FullPageSpinner } from './components/FullPageSpinner';
@@ -20,6 +20,7 @@ const Home = React.lazy(() => import('./pages/Home'));
 const Admissions = React.lazy(() => import('./pages/Admissions'));
 const DigitalLibrary = React.lazy(() => import('./pages/DigitalLibrary'));
 const PortalDashboard = React.lazy(() => import('./pages/PortalDashboard'));
+const SelectRole = React.lazy(() => import('./pages/SelectRole'));
 const Courses = React.lazy(() => import('./pages/Courses'));
 const StudyAssistant = React.lazy(() => import('./pages/StudyAssistant'));
 const About = React.lazy(() => import('./pages/About'));
@@ -31,13 +32,18 @@ const Alumni = React.lazy(() => import('./pages/Alumni'));
 export default function App() {
   useEffect(() => {
     handleRedirectResult()
-      .then((user) => {
+      .then(async (user) => {
         console.log('Redirect result user:', user);
         if (user) {
           if (sessionStorage.getItem('isLoggingIn') === 'true') {
             sessionStorage.removeItem('isLoggingIn');
           }
-          window.location.href = '/portal';
+          const hasRole = await checkUserDocExists(user);
+          if (hasRole) {
+            window.location.href = '/portal';
+          } else {
+            window.location.href = '/select-role';
+          }
         }
       })
       .catch((error) => {
@@ -47,13 +53,17 @@ export default function App() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-          await checkAndCreateUserDoc(user);
+          const hasRole = await checkUserDocExists(user);
           if (sessionStorage.getItem('isLoggingIn') === 'true') {
             sessionStorage.removeItem('isLoggingIn');
-            window.location.href = '/portal';
+            if (hasRole) {
+              window.location.href = '/portal';
+            } else {
+              window.location.href = '/select-role';
+            }
           }
         } catch (error) {
-          console.error("Error creating user doc:", error);
+          console.error("Error checking user doc:", error);
         }
       }
     });
@@ -93,6 +103,7 @@ export default function App() {
 
           {/* Portal/Dashboard Routes */}
           <Route element={<ProtectedRoute />}>
+            <Route path="/select-role" element={<SelectRole />} />
             <Route path="/portal" element={<PortalLayout />}>
               <Route index element={<PortalDashboard />} />
               <Route path="courses" element={<Courses />} />

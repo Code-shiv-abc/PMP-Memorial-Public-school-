@@ -16,7 +16,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+export const db = getFirestore(app, 'ai-studio-d09d3a80-a4dd-45a4-9b71-c99cde47c87b');
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
@@ -34,22 +34,38 @@ export async function signIn() {
   await signInWithRedirect(auth, googleProvider);
 }
 
-export async function checkAndCreateUserDoc(user: any) {
+export async function checkUserDocExists(user: any): Promise<boolean> {
+  if (!user) return false;
+  const userRef = doc(db, 'users', user.uid);
+  const userSnap = await getDoc(userRef);
+  return userSnap.exists();
+}
+
+export async function createUserDocWithRole(user: any, role: string) {
+  if (!user) return;
   const userRef = doc(db, 'users', user.uid);
   const userSnap = await getDoc(userRef);
   if (!userSnap.exists()) {
-    await setDoc(userRef, {
+    const baseData = {
       name: user.displayName || '',
       email: user.email || '',
-      role: 'student',
-      gpa: 0,
-      attendance: 0,
-      courses: [],
-      enrolledCourseIds: [],
-      schedule: [],
-      tasks: [],
+      role: role,
       createdAt: serverTimestamp(),
-    });
+    };
+
+    // Add role-specific default data
+    if (role === 'student') {
+      Object.assign(baseData, {
+        gpa: 0,
+        attendance: 0,
+        courses: [],
+        enrolledCourseIds: [],
+        schedule: [],
+        tasks: [],
+      });
+    }
+
+    await setDoc(userRef, baseData);
   }
 }
 
@@ -64,7 +80,6 @@ export async function handleRedirectResult() {
     const result = await redirectResultPromise;
     console.log('Redirect result:', result);
     if (result) {
-      await checkAndCreateUserDoc(result.user);
       return result.user;
     }
     return null;

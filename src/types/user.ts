@@ -20,6 +20,7 @@ export interface Task {
 
 export interface UserProfile {
   name?: string;
+  role?: string;
   gpa: number;
   attendance: number;
   assignmentsDue: number;
