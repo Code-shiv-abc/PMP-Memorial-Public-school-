@@ -29,7 +29,13 @@ const Alumni = React.lazy(() => import('./pages/Alumni'));
 
 export default function App() {
   useEffect(() => {
-    handleRedirectResult().catch(console.error);
+    handleRedirectResult()
+      .then((user) => {
+        if (user) {
+          window.location.href = '/portal';
+        }
+      })
+      .catch(console.error);
   }, []);
 
   return (
