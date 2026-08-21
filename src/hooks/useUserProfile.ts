@@ -38,6 +38,7 @@ export function useUserProfile(): UseUserProfileReturn {
               // Cast to UserProfile type, handling potential missing arrays gracefully
               const profile: UserProfile = {
                 name: docData.name,
+                role: docData.role,
                 gpa: docData.gpa ?? 0,
                 attendance: docData.attendance ?? 0,
                 assignmentsDue: docData.assignmentsDue ?? 0,
