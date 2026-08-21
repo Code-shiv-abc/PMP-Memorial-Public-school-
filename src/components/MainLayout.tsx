@@ -5,10 +5,8 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
 import { signIn } from "@/lib/firebase";
-import { useLanguage } from "../context/LanguageContext";
 
 export function MainLayout() {
-  const { language, setLanguage } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -102,12 +100,6 @@ export function MainLayout() {
             ))}
             <div className="flex items-center gap-4 ml-4">
               <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">About</Link>
-              <button
-                onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
-                className="border border-[#D4AF37] text-[#D4AF37] rounded px-3 py-1 text-sm font-medium"
-              >
-                {language === 'en' ? 'हिंदी' : 'English'}
-              </button>
               <Link to="/admissions" className="inline-flex h-9 shrink-0 items-center justify-center border border-transparent bg-clip-padding text-sm whitespace-nowrap outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 gap-1.5 rounded-none bg-foreground text-background hover:bg-primary hover:text-primary-foreground font-semibold px-6 transition-colors duration-300">
                 Apply Now <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
@@ -161,15 +153,6 @@ export function MainLayout() {
                    transition={{ delay: 0.3 }}
                    className="pt-6 border-t border-border flex flex-col gap-4 mt-4"
                 >
-                  <button
-                    onClick={() => {
-                      setLanguage(language === 'en' ? 'hi' : 'en');
-                      setMobileMenuOpen(false);
-                    }}
-                    className="border border-[#D4AF37] text-[#D4AF37] rounded px-3 py-1 text-sm font-medium w-full text-center"
-                  >
-                    {language === 'en' ? 'हिंदी' : 'English'}
-                  </button>
                   <Link to="/admissions" onClick={() => setMobileMenuOpen(false)} className="inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding font-medium whitespace-nowrap outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 h-9 gap-1.5 px-2.5 rounded-none w-full bg-foreground text-background hover:bg-primary">
                     Apply for Admission
                   </Link>
