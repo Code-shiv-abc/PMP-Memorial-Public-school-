@@ -1,21 +1,13 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp, getDocFromServer } from 'firebase/firestore';
 import toast from 'react-hot-toast';
-import { en } from '../src/translations/en';
-import { hi } from '../src/translations/hi';
-
-const configuredAuthDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
-// Fallback to .web.app instead of .firebaseapp.com to fix 404 init.json issue on redirect
-const authDomain = configuredAuthDomain?.includes('.firebaseapp.com')
-  ? configuredAuthDomain.replace('.firebaseapp.com', '.web.app')
-  : configuredAuthDomain;
 
 const firebaseConfig = {
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: authDomain,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
@@ -38,62 +30,34 @@ export async function testConnection() {
 }
 
 export async function signIn() {
-  await signInWithRedirect(auth, googleProvider);
-}
-
-export async function checkUserDocExists(user: any): Promise<boolean> {
-  if (!user) return false;
-  const userRef = doc(db, 'users', user.uid);
-  const userSnap = await getDoc(userRef);
-  return userSnap.exists();
-}
-
-export async function createUserDocWithRole(user: any, role: string) {
-  if (!user) return;
-  const userRef = doc(db, 'users', user.uid);
-  const userSnap = await getDoc(userRef);
-  if (!userSnap.exists()) {
-    const baseData = {
-      name: user.displayName || '',
-      email: user.email || '',
-      role: role,
-      createdAt: serverTimestamp(),
-    };
-
-    // Add role-specific default data
-    if (role === 'student') {
-      Object.assign(baseData, {
+  try {
+    const result = await signInWithPopup(auth, googleProvider)
+    const userRef = doc(db, 'users', result.user.uid)
+    const userSnap = await getDoc(userRef)
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        name: result.user.displayName || '',
+        email: result.user.email || '',
+        role: 'student',
         gpa: 0,
         attendance: 0,
         courses: [],
         enrolledCourseIds: [],
         schedule: [],
         tasks: [],
-      });
+        createdAt: serverTimestamp(),
+      })
     }
-
-    await setDoc(userRef, baseData);
-  }
-}
-
-let redirectResultPromise: Promise<any> | null = null;
-
-export async function handleRedirectResult() {
-  try {
-    console.log('Checking redirect result...');
-    if (!redirectResultPromise) {
-      redirectResultPromise = getRedirectResult(auth);
-    }
-    const result = await redirectResultPromise;
-    console.log('Redirect result:', result);
-    if (result) {
-      return result.user;
-    }
-    return null;
+    return result.user
   } catch (error) {
-    console.error('Redirect error:', error);
-    toast.error('Failed to sign in. Please try again.');
-    throw error;
+    if (error instanceof Error) {
+      if (error.message.includes('popup-blocked')) {
+        toast.error('Please allow popups for this site and try again.')
+      } else if (!error.message.includes('popup-closed-by-user')) {
+        toast.error('Failed to sign in. Please try again.')
+      }
+    }
+    throw error
   }
 }
 
