@@ -22,7 +22,8 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, 'ai-studio-d09d3a80-a4dd-45a4-9b71-c99cde47c87b');
+const databaseId = import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID || 'ai-studio-d09d3a80-a4dd-45a4-9b71-c99cde47c87b';
+export const db = getFirestore(app, databaseId);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
