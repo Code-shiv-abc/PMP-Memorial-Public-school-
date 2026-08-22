@@ -18,7 +18,6 @@ const Home = React.lazy(() => import('./pages/Home'));
 const Admissions = React.lazy(() => import('./pages/Admissions'));
 const DigitalLibrary = React.lazy(() => import('./pages/DigitalLibrary'));
 const PortalDashboard = React.lazy(() => import('./pages/PortalDashboard'));
-const SelectRole = React.lazy(() => import('./pages/SelectRole'));
 const Courses = React.lazy(() => import('./pages/Courses'));
 const StudyAssistant = React.lazy(() => import('./pages/StudyAssistant'));
 const About = React.lazy(() => import('./pages/About'));
@@ -60,7 +59,6 @@ export default function App() {
 
           {/* Portal/Dashboard Routes */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/select-role" element={<SelectRole />} />
             <Route path="/portal" element={<PortalLayout />}>
               <Route index element={<PortalDashboard />} />
               <Route path="courses" element={<Courses />} />
