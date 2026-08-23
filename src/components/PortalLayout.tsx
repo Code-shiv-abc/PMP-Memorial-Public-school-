@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   Loader2,
-  Bot
+  Bot,
+  ArrowLeft
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -71,6 +72,9 @@ export function PortalLayout() {
       </div>
       
       <div className="flex-1 py-6 px-4 overflow-y-auto">
+        <Link to="/" className="flex items-center gap-2 text-[#D4AF37] text-sm mb-6 hover:text-white transition-colors">
+          <ArrowLeft className="w-4 h-4" /> PMP Memorial Public School
+        </Link>
         <nav className="space-y-1">
           {sidebarItems.map((item) => (
             <Link

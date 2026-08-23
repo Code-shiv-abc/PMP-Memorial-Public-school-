@@ -63,14 +63,22 @@ export function MainLayout() {
             <span className="hidden sm:inline opacity-50">|</span>
              <a href="mailto:info@pmpmemorial.edu" className="hover:text-primary transition-colors">info@pmpmemorial.edu</a>
           </div>
-          <button 
-            onClick={handleLogin} 
-            disabled={isLoggingIn} 
-            className="hover:text-primary transition-colors flex items-center gap-2 disabled:opacity-50"
-          >
-            {isLoggingIn ? <Loader2 className="w-3 h-3 animate-spin" /> : <LogIn className="w-3 h-3" />}
-            {user ? 'Go to Portal' : 'Portal Access'}
-          </button>
+          {user ? (
+            <button
+              onClick={() => navigate('/portal')}
+              className="hover:text-primary transition-colors flex items-center gap-2 disabled:opacity-50"
+            >
+              Go to Portal
+            </button>
+          ) : (
+            <button
+              onClick={handleLogin}
+              disabled={isLoggingIn}
+              className="hover:text-primary transition-colors flex items-center gap-2 disabled:opacity-50"
+            >
+              {isLoggingIn ? 'Signing in...' : 'Access Portal'}
+            </button>
+          )}
         </div>
       </div>
 
