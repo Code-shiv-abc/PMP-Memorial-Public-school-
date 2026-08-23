@@ -206,8 +206,13 @@ export function MainLayout() {
             <div className="md:col-span-2 md:col-start-7">
               <h3 className="font-sans font-bold text-foreground mb-6 uppercase text-xs tracking-[0.2em]">Institution</h3>
               <ul className="space-y-4">
-                {['About Us', 'Leadership', 'Academics', 'Admissions', 'Careers'].map((item) => (
-                  <li key={item}><Link to="#" className="text-muted-foreground hover:text-primary transition-colors text-sm">{item}</Link></li>
+                {[
+                  { name: 'About Us', path: '/about' },
+                  { name: 'Leadership', path: '/faculty' },
+                  { name: 'Academics', path: '/academics' },
+                  { name: 'Admissions', path: '/admissions' },
+                ].map((item) => (
+                  <li key={item.name}><Link to={item.path} className="text-muted-foreground hover:text-primary transition-colors text-sm">{item.name}</Link></li>
                 ))}
               </ul>
             </div>
@@ -215,8 +220,13 @@ export function MainLayout() {
             <div className="md:col-span-2">
               <h3 className="font-sans font-bold text-foreground mb-6 uppercase text-xs tracking-[0.2em]">Resources</h3>
               <ul className="space-y-4">
-                {['Digital Library', 'Student Portal', 'Faculty Portal', 'Alumni Network', 'Events Calendar'].map((item) => (
-                  <li key={item}><Link to="#" className="text-muted-foreground hover:text-primary transition-colors text-sm">{item}</Link></li>
+                {[
+                  { name: 'Digital Library', path: '/library' },
+                  { name: 'Student Portal', path: '/portal' },
+                  { name: 'Alumni Network', path: '/alumni' },
+                  { name: 'Events Calendar', path: '/events' },
+                ].map((item) => (
+                  <li key={item.name}><Link to={item.path} className="text-muted-foreground hover:text-primary transition-colors text-sm">{item.name}</Link></li>
                 ))}
               </ul>
             </div>
