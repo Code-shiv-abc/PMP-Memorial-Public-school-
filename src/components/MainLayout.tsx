@@ -31,18 +31,17 @@ export function MainLayout() {
   }, []);
 
   const handleLogin = async () => {
-    if (user) {
-      navigate('/portal');
-      return;
-    }
-
-    setIsLoggingIn(true);
     try {
-      sessionStorage.setItem('isLoggingIn', 'true');
+      setIsLoggingIn(true);
+      if (auth.currentUser) {
+        navigate('/portal');
+        return;
+      }
       await signIn();
-      // Will redirect page, no need to navigate manually
+      navigate('/portal');
     } catch (error) {
       console.error("Login failed:", error);
+    } finally {
       setIsLoggingIn(false);
     }
   };
