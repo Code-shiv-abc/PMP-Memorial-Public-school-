@@ -27,4 +27,5 @@ export interface UserProfile {
   courses: Course[];
   schedule: ScheduleItem[];
   tasks: Task[];
+  enrolledCourseIds?: string[];
 }
