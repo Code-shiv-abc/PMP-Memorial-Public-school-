@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore'
+import { auth, db } from '@/lib/firebase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +10,7 @@ import { BookOpen, Calendar as CalendarIcon, Clock, Users, CheckCircle, Search, 
 import { Input } from "@/components/ui/input";
 import { useCourses } from "@/src/hooks/useCourses";
 import { Course } from "@/src/types/course";
+import { useUserProfile } from "@/src/hooks/useUserProfile";
 
 export default function Courses() {
   const { data: catalog, loading, error } = useCourses();
@@ -24,8 +27,9 @@ export default function Courses() {
     course.department?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Hardcode enrolled courses as empty for now since we are just displaying catalog
-  const enrolledCourses: Course[] = [];
+  const { data: profile } = useUserProfile()
+  const enrolledCourseIds = profile?.enrolledCourseIds ?? []
+  const enrolledCourses = catalog.filter(course => enrolledCourseIds.includes(course.id));
 
   const handleEnrollClick = (course: Course) => {
     setSelectedCourse(course);
@@ -33,27 +37,34 @@ export default function Courses() {
     setIsEnrollDialogOpen(true);
   };
 
-  const confirmEnrollment = () => {
-    if (!selectedCourse) return;
+  const confirmEnrollment = async () => {
+    if (!selectedCourse || !auth.currentUser) return
 
-    setEnrollmentStatus("loading");
+    setEnrollmentStatus('loading')
 
-    // Simulate network delay and validation
-    setTimeout(() => {
-      // Logic constraint: Class full
-      if (selectedCourse.enrolled >= selectedCourse.capacity) {
-        setEnrollmentStatus("error");
-        setErrorMessage("Class is fully booked. Waitlist is currently closed.");
-        return;
-      }
+    try {
+      const userRef = doc(db, 'users', auth.currentUser.uid)
       
-      setEnrollmentStatus("success");
+      await updateDoc(userRef, {
+        courses: arrayUnion({
+          name: selectedCourse.name,
+          code: selectedCourse.id,
+          teacher: selectedCourse.instructor,
+          progress: 0
+        }),
+        enrolledCourseIds: arrayUnion(selectedCourse.id)
+      })
       
+      setEnrollmentStatus('success')
       setTimeout(() => {
-        setIsEnrollDialogOpen(false);
-      }, 1500);
+        setIsEnrollDialogOpen(false)
+        setEnrollmentStatus('idle')
+      }, 1500)
 
-    }, 800);
+    } catch (error) {
+      setEnrollmentStatus('error')
+      setErrorMessage('Failed to enroll. Please try again.')
+    }
   };
 
   const handleDropCourse = (courseId: string) => {
@@ -181,7 +192,7 @@ export default function Courses() {
           ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredCatalog.map(course => {
-              const isEnrolled = false; // Mock as false for now
+              const isEnrolled = enrolledCourseIds.includes(course.id)
               const isFull = course.enrolled >= course.capacity;
 
               return (
