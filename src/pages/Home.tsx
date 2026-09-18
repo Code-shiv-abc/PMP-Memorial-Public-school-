@@ -135,34 +135,34 @@ export default function Home() {
                viewport={{ once: true }}
                transition={{ duration: 0.8 }}
              >
-                <Badge variant="outline" className="border-border text-foreground uppercase tracking-[0.2em] mb-8 font-medium bg-transparent">Our Philosophy</Badge>
+                <Badge variant="outline" className="border-border text-foreground uppercase tracking-[0.2em] mb-8 font-medium bg-transparent">हमारी विशेषताएं</Badge>
                 <h2 className="text-4xl md:text-5xl font-serif font-medium leading-[1.1] text-foreground mb-8">
-                  Cultivating minds that <span className="italic text-primary">challenge</span> the ordinary.
+                  Quality Education for <span className="italic text-primary">Every Child</span>
                 </h2>
                 <div className="w-full h-[1px] bg-border mb-8" />
                 <p className="text-lg text-muted-foreground font-light leading-relaxed mb-4">
-                  We believe that education is not merely the transmission of information, but the ignition of curiosity. Our campus serves as a canvas where students map their own potential.
+                  PMP Memorial Public School provides disciplined, modern education in a safe and peaceful environment. We offer free computer education from Class 3 to 12 and free coaching for Classes 9 to 12.
                 </p>
                 <p className="text-lg text-muted-foreground font-light leading-relaxed mb-10">
-                  With a rigorous academic framework and robust co-curricular ecosystem, we prepare students for the complexities of a dynamic world.
+                  With NTT trained teachers for Nursery and KG, experienced faculty throughout, and 98% parent satisfaction — we are the most trusted education center in Shahpur, Gonda.
                 </p>
-                <Button variant="link" className="p-0 text-foreground text-base h-auto hover:text-primary transition-colors flex items-center gap-2 group">
-                  Read our full manifesto <MoveRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
              </motion.div>
              <motion.div 
                initial={{ opacity: 0, scale: 0.95 }}
                whileInView={{ opacity: 1, scale: 1 }}
                viewport={{ once: true }}
                transition={{ duration: 1 }}
-               className="aspect-[4/5] bg-secondary relative"
+               className="aspect-[4/5] bg-[#1a1a2e] relative border border-[#D4AF37]/20 rounded-xl flex items-center justify-center"
              >
-               {/* Placeholder for high-end photography */}
-               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=2073')] bg-cover bg-center opacity-40 mix-blend-luminosity hover:mix-blend-normal transition-all duration-1000 saturate-0 hover:saturate-100" />
-               <div className="absolute inset-0 ring-1 ring-inset ring-border/20 pointer-events-none" />
-               <div className="absolute bottom-8 left-8 right-8 bg-background/80 backdrop-blur-md p-6 border border-border/50">
-                  <p className="font-serif italic text-lg text-foreground mb-2">"The highest result of education is tolerance."</p>
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">— Helen Keller</p>
+               <p className="text-[#D4AF37]/40 text-sm text-center px-8">
+                 School photo coming soon
+               </p>
+               <div className="absolute bottom-8 left-8 right-8 bg-[#0F1115]/80 backdrop-blur-md p-6 border border-[#D4AF37]/20">
+                  <p className="font-serif italic text-lg text-white mb-2">
+                    "उद्यमेन हि सिध्यन्ति कार्याणि न मनोरथैः।<br />
+                    न हि सुप्तस्य सिंहस्य प्रविशन्ति मुखे मृगाः॥"
+                  </p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]/60">— Sanskrit Proverb</p>
                </div>
              </motion.div>
           </div>
