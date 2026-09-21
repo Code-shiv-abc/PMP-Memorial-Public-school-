@@ -85,42 +85,31 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Elite Stats / Bento Box Style */}
-      <section className="bg-background pt-24 pb-32 relative">
+      {/* Horizontal Stats Bar */}
+      <section className="py-16 border-y border-border/50 bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-           <motion.div 
-             initial={{ opacity: 0, y: 40 }}
-             whileInView={{ opacity: 1, y: 0 }}
-             viewport={{ once: true, margin: "-100px" }}
-             transition={{ duration: 0.8 }}
-             className="grid grid-cols-1 md:grid-cols-4 gap-4"
-           >
-              {/* Box 1 */}
-              <div className="md:col-span-2 bg-card p-10 lg:p-14 border border-border/50 flex flex-col justify-end min-h-[320px] group hover:border-primary/30 transition-colors">
-                 <div className="text-secondary/20 mb-auto"><Trophy className="w-12 h-12" /></div>
-                 <h3 className="text-5xl md:text-6xl font-serif text-foreground mb-4 font-medium">98%</h3>
-                 <p className="text-muted-foreground uppercase tracking-[0.2em] text-sm font-semibold">Parent Satisfaction</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-8"
+          >
+            {[
+              { value: "98%", label: "Parent Satisfaction", hindi: "अभिभावक संतुष्टि" },
+              { value: "3-12", label: "Hindi Medium Classes", hindi: "हिन्दी माध्यम" },
+              { value: "PG-8", label: "English Medium Classes", hindi: "अंग्रेजी माध्यम" },
+              { value: "Free", label: "Computer Education", hindi: "कम्प्यूटर शिक्षा" },
+            ].map((stat, i) => (
+              <div key={i} className="text-center p-6 border border-border/50 rounded-xl hover:border-[#D4AF37]/40 transition-colors">
+                <div className="text-4xl md:text-5xl font-serif font-bold text-[#D4AF37] mb-2">{stat.value}</div>
+                <div className="text-sm font-medium text-foreground mb-1">
+                  {stat.label}
+                </div>
+                <div className="text-xs text-muted-foreground">{stat.hindi}</div>
               </div>
-
-              {/* Box 2 (Stacked) */}
-              <div className="grid grid-rows-2 gap-4 md:col-span-1">
-                 <div className="bg-card p-8 border border-border/50 flex flex-col justify-center group hover:border-primary/30 transition-colors">
-                    <h3 className="text-4xl font-serif text-foreground mb-2 font-medium">3-12</h3>
-                    <p className="text-muted-foreground uppercase tracking-[0.2em] text-[10px] font-semibold">Hindi Medium Classes</p>
-                 </div>
-                 <div className="bg-primary p-8 border border-primary flex flex-col justify-center">
-                    <h3 className="text-4xl font-serif text-primary-foreground mb-2 font-medium">PG-8</h3>
-                    <p className="text-primary-foreground/80 uppercase tracking-[0.2em] text-[10px] font-semibold">English Medium Classes</p>
-                 </div>
-              </div>
-
-              {/* Box 3 */}
-              <div className="md:col-span-1 bg-card p-10 border border-border/50 flex flex-col justify-end min-h-[320px] group hover:border-primary/30 transition-colors">
-                 <div className="text-secondary/20 mb-auto"><Users className="w-12 h-12" /></div>
-                 <h3 className="text-5xl font-serif text-foreground mb-4 font-medium">Free</h3>
-                 <p className="text-muted-foreground uppercase tracking-[0.2em] text-sm font-semibold">Computer Education</p>
-              </div>
-           </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
