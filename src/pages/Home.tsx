@@ -175,16 +175,29 @@ export default function Home() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 gap-12">
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                Announcements coming soon. Check back for
-                updates from PMP Memorial Public School.
-              </p>
-              <p className="text-[#D4AF37]/60 text-sm mt-2">
-                Contact: Sunil Kumar Tiwari — 9792954343
-              </p>
-            </div>
+          <div className="grid grid-cols-1 gap-4 mt-8">
+            {[
+              { tag: "Admissions", title: "प्रवेश प्रारम्भ — Admissions Open for 2026-27", date: "01 Apr 2026" },
+              { tag: "Academic", title: "Free Computer Education — Class 3 to 12", date: "Ongoing" },
+              { tag: "Notice", title: "Registration fee waived for girls in Class 9 & 11", date: "Annual" },
+            ].map((item, i) => (
+              <div key={i} className="py-6 border-b border-border/50 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center hover:bg-card/50 transition-colors px-4 -mx-4">
+                <div className="flex-1">
+                  <span className="text-[10px] text-[#D4AF37] uppercase tracking-[0.2em] font-bold mb-2 block">{item.tag}</span>
+                  <h3 className="text-lg font-serif text-foreground leading-tight">{item.title}</h3>
+                </div>
+                <span className="text-sm text-muted-foreground font-light shrink-0">{item.date}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center py-8 mt-4">
+            <p className="text-[#D4AF37]/60 text-sm mt-2">
+              Contact: Sunil Kumar Tiwari — 9792954343
+            </p>
+            <p className="text-[#D4AF37]/60 text-xs mt-4">
+              Real-time announcements coming soon via Sanity CMS
+            </p>
           </div>
         </div>
       </section>
