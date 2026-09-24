@@ -59,30 +59,20 @@ export default function Home() {
               क्षेत्र का सबसे विश्वसनीय शिक्षा का केन्द्र
             </motion.p>
             
-            <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-              <Link to="/admissions" className="inline-flex h-14 px-8 shrink-0 items-center justify-center border border-transparent bg-clip-padding text-base whitespace-nowrap outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 gap-1.5 rounded-none bg-foreground text-background hover:bg-primary font-semibold transition-colors duration-300">
-                Begin the Journey <ArrowUpRight className="w-4 h-4 ml-2 opacity-50" />
+            <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-4 mt-8">
+              <Link to="/admissions">
+                <Button className="bg-[#D4AF37] text-[#0F1115] hover:bg-[#b5952f] font-semibold px-8 py-3 text-base">
+                  प्रवेश लें — Apply Now
+                </Button>
               </Link>
-              <Link to="/about" className="inline-flex h-14 px-6 shrink-0 items-center justify-center border border-transparent bg-clip-padding text-base font-medium whitespace-nowrap outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 gap-1.5 rounded-none text-foreground hover:bg-transparent hover:text-primary group">
-                  <span className="flex items-center justify-center w-10 h-10 rounded-full border border-border group-hover:border-primary transition-colors mr-3">
-                    <Play className="w-3 h-3 ml-1" />
-                  </span>
-                  Explore Campus
+              <Link to="/about">
+                <Button variant="outline" className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0F1115] px-8 py-3 text-base">
+                  हमारे बारे में — About Us
+                </Button>
               </Link>
             </motion.div>
           </motion.div>
         </div>
-
-        {/* Scroll Indicator */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 1 }}
-          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-        >
-           <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Scroll</span>
-           <div className="w-[1px] h-12 bg-gradient-to-b from-primary/50 to-transparent" />
-        </motion.div>
       </section>
 
       {/* Horizontal Stats Bar */}
