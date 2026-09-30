@@ -206,9 +206,14 @@ export function MainLayout() {
                   <span className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase opacity-80 mt-1 block">Public School</span>
                 </div>
               </Link>
-              <p className="text-muted-foreground text-lg leading-relaxed max-w-sm font-light">
-                Empowering minds, shaping futures. A premier institution dedicated to academic excellence, innovative leadership, and holistic development since 1996.
-              </p>
+              <div className="text-muted-foreground text-lg leading-relaxed max-w-sm font-light space-y-4">
+                <p>
+                  उत्तर प्रदेश शासन द्वारा मान्यता प्राप्त विद्यालय। निःशुल्क कम्प्यूटर शिक्षा एवं डिजिटल शिक्षा से युक्त।
+                </p>
+                <p>
+                  UP Government recognized school with free computer and digital education.
+                </p>
+              </div>
             </div>
             
             <div className="md:col-span-2 md:col-start-7">
@@ -242,20 +247,27 @@ export function MainLayout() {
             <div className="md:col-span-2">
               <h3 className="font-sans font-bold text-foreground mb-6 uppercase text-xs tracking-[0.2em]">Connect</h3>
               <ul className="space-y-4 text-sm text-muted-foreground font-light">
-                <li>123 Education Blvd<br/>Knowledge City, KC 10001</li>
-                <li><a href="tel:+15551234567" className="hover:text-primary transition-colors">+1 (555) 123-4567</a></li>
-                <li><a href="mailto:contact@pmpmemorial.edu" className="hover:text-primary transition-colors">contact@pmpmemorial.edu</a></li>
+                <li>Shahpur, Gonda, Rek Sadiya,<br/>Uttar Pradesh 271504</li>
+                <li className="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-phone"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  <span>
+                    Contact: Sunil Kumar Tiwari<br/>
+                    <a href="tel:9792954343" className="hover:text-primary transition-colors">9792954343</a>
+                  </span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-phone"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  <span>
+                    Arvind Kumar Tiwari<br/>
+                    <a href="tel:7651995858" className="hover:text-primary transition-colors">7651995858</a>
+                  </span>
+                </li>
               </ul>
             </div>
           </div>
           
           <div className="pt-8 border-t border-border/50 text-xs font-medium tracking-wide text-muted-foreground flex flex-col md:flex-row justify-between items-center gap-4 uppercase">
-            <p>&copy; {new Date().getFullYear()} P.M.P. Memorial Public School.</p>
-            <div className="flex gap-8">
-              <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-foreground transition-colors">Accessibility</a>
-            </div>
+            <p>&copy; {new Date().getFullYear()} PMP Memorial Public School, Shahpur, Gonda. All rights reserved.</p>
           </div>
         </div>
       </footer>
