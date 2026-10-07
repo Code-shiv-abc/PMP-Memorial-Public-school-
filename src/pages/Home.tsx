@@ -3,7 +3,29 @@ import { Badge } from "@/components/ui/badge";
 import { MoveRight, Calendar as CalendarIcon, BookOpen, Users, Trophy, Play, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { motion } from "motion/react";
+import { motion, useInView, useSpring, useTransform } from "motion/react";
+import { useRef, useEffect } from "react";
+
+function Counter({ value, suffix = "" }: { value: number, suffix?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true });
+
+  const spring = useSpring(0, {
+    mass: 1,
+    stiffness: 75,
+    damping: 15,
+  });
+
+  const display = useTransform(spring, (current) => Math.round(current) + suffix);
+
+  useEffect(() => {
+    if (inView) {
+      spring.set(value);
+    }
+  }, [inView, spring, value]);
+
+  return <motion.span ref={ref}>{display}</motion.span>;
+}
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -42,9 +64,12 @@ export default function Home() {
             variants={stagger}
             className="max-w-4xl"
           >
-            <motion.h1 variants={fadeIn} className="text-6xl md:text-8xl lg:text-[7.5rem] font-serif font-medium text-foreground mb-4 leading-[1.05] tracking-tight">
-              PMP Memorial<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/50 italic pr-4">Public School</span>
+            <motion.h1 className="text-6xl md:text-8xl lg:text-[7.5rem] font-serif font-medium text-foreground mb-4 leading-[1.05] tracking-tight">
+              <motion.span variants={fadeIn} className="inline-block mr-4 md:mr-6 lg:mr-8">PMP</motion.span>
+              <motion.span variants={fadeIn} className="inline-block">Memorial</motion.span>
+              <br />
+              <motion.span variants={fadeIn} className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/50 italic pr-4 md:pr-6 lg:pr-8 inline-block mr-4 md:mr-6 lg:mr-8">Public</motion.span>
+              <motion.span variants={fadeIn} className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/50 italic pr-4 inline-block">School</motion.span>
             </motion.h1>
 
             <motion.p variants={fadeIn} className="text-2xl font-serif text-[#D4AF37] mb-2">
@@ -86,18 +111,31 @@ export default function Home() {
             className="grid grid-cols-2 md:grid-cols-4 gap-8"
           >
             {[
-              { value: "98%", label: "Parent Satisfaction", hindi: "अभिभावक संतुष्टि" },
-              { value: "3-12", label: "Hindi Medium Classes", hindi: "हिन्दी माध्यम" },
-              { value: "PG-8", label: "English Medium Classes", hindi: "अंग्रेजी माध्यम" },
-              { value: "Free", label: "Computer Education", hindi: "कम्प्यूटर शिक्षा" },
+              { type: "counter", value: 98, suffix: "%", label: "Parent Satisfaction", hindi: "अभिभावक संतुष्टि" },
+              { type: "text", value: "3-12", label: "Hindi Medium Classes", hindi: "हिन्दी माध्यम" },
+              { type: "text", value: "PG-8", label: "English Medium Classes", hindi: "अंग्रेजी माध्यम" },
+              { type: "text", value: "Free", label: "Computer Education", hindi: "कम्प्यूटर शिक्षा" },
             ].map((stat, i) => (
-              <div key={i} className="text-center p-6 border border-border/50 rounded-xl hover:border-[#D4AF37]/40 transition-colors">
-                <div className="text-4xl md:text-5xl font-serif font-bold text-[#D4AF37] mb-2">{stat.value}</div>
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.1 }}
+                className="text-center p-6 border border-border/50 rounded-xl hover:border-[#D4AF37]/40 transition-colors"
+              >
+                <div className="text-4xl md:text-5xl font-serif font-bold text-[#D4AF37] mb-2">
+                  {stat.type === "counter" ? (
+                    <Counter value={stat.value as number} suffix={stat.suffix} />
+                  ) : (
+                    stat.value
+                  )}
+                </div>
                 <div className="text-sm font-medium text-foreground mb-1">
                   {stat.label}
                 </div>
                 <div className="text-xs text-muted-foreground">{stat.hindi}</div>
-              </div>
+              </motion.div>
             ))}
           </motion.div>
         </div>
@@ -171,13 +209,20 @@ export default function Home() {
               { tag: "Academic", title: "Free Computer Education — Class 3 to 12", date: "Ongoing" },
               { tag: "Notice", title: "Registration fee waived for girls in Class 9 & 11", date: "Annual" },
             ].map((item, i) => (
-              <div key={i} className="py-6 border-b border-border/50 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center hover:bg-card/50 transition-colors px-4 -mx-4">
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.1 }}
+                className="py-6 border-b border-border/50 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center hover:bg-card/50 transition-colors px-4 -mx-4"
+              >
                 <div className="flex-1">
                   <span className="text-[10px] text-[#D4AF37] uppercase tracking-[0.2em] font-bold mb-2 block">{item.tag}</span>
                   <h3 className="text-lg font-serif text-foreground leading-tight">{item.title}</h3>
                 </div>
                 <span className="text-sm text-muted-foreground font-light shrink-0">{item.date}</span>
-              </div>
+              </motion.div>
             ))}
           </div>
 

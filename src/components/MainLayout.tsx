@@ -84,8 +84,8 @@ export function MainLayout() {
 
       {/* Main Premium Navigation */}
       <header className={cn(
-        "sticky top-0 z-40 transition-all duration-500 border-b",
-        scrolled ? "bg-background/80 backdrop-blur-xl border-border py-2 support-[backdrop-filter]:bg-background/60" : "bg-background/95 border-transparent py-4"
+        "sticky top-0 z-40 transition-all duration-300 border-b",
+        scrolled ? "bg-background/80 backdrop-blur-md border-border/50 py-2" : "bg-transparent border-transparent py-4"
       )}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-4 group">
