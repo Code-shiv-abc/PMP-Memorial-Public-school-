@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MoveRight, Calendar as CalendarIcon, BookOpen, Users, Trophy, Play, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion, useInView, useSpring, useTransform } from "motion/react";
@@ -198,9 +197,6 @@ export default function Home() {
               <h2 className="text-4xl md:text-5xl font-serif font-medium text-foreground mb-4">The Bulletin</h2>
               <p className="text-muted-foreground max-w-xl font-light">Latest dispatches, academic schedules, and institutional events.</p>
             </motion.div>
-            <Button variant="outline" className="rounded-none border-border hover:bg-primary hover:text-primary-foreground transition-colors uppercase tracking-[0.1em] text-xs h-12 px-6">
-              View Directory
-            </Button>
           </div>
 
           <div className="grid grid-cols-1 gap-4 mt-8">
