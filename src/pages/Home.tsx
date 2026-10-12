@@ -1,7 +1,26 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { motion } from "motion/react";
+import { motion, useInView, useSpring, useTransform } from "motion/react";
+import { useRef, useEffect } from "react";
+
+function Counter({ value, suffix = "" }: { value: number, suffix?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true });
+  const spring = useSpring(0, {
+    mass: 1,
+    stiffness: 75,
+    damping: 15,
+  });
+  const display = useTransform(spring, (current) =>
+    Math.round(current) + suffix);
+  useEffect(() => {
+    if (inView) {
+      spring.set(value);
+    }
+  }, [inView, spring, value]);
+  return <motion.span ref={ref}>{display}</motion.span>;
+}
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
