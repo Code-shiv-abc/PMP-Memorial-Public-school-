@@ -70,7 +70,7 @@ Guidelines:
 - Respond in the same language the student uses`;
 
       const session = await ai.chats.create({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         config: {
           systemInstruction: systemInstruction,
         }
