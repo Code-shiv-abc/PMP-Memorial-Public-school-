@@ -1,248 +1,192 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useLanguage } from '@/src/context/LanguageContext';
-import { useUserProfile } from '@/src/hooks/useUserProfile';
+import React, { useState } from 'react';
 import { GoogleGenAI } from '@google/genai';
-import type { Chat } from '@google/genai';
-import { Send, Trash2, Bot, User } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { Course } from '@/src/types/user';
 
-// Initialize the Gemini client
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+const SCHOOL_CLASSES = [
+  'PG – Class 2 (English Medium)',
+  'Class 3 – 5 (Hindi / English Medium)',
+  'Class 6 – 8 (Hindi / English Medium)',
+  'Class 9 – 10 (UP Board / NCERT)',
+  'Class 11 – 12 (UP Board / NCERT)',
+];
 
-interface Message {
-  role: 'user' | 'model';
+const SCHOOL_SUBJECTS = [
+  'Mathematics (गणित)',
+  'Science (विज्ञान)',
+  'English Grammar & Literature',
+  'Hindi & Sanskrit (हिंदी एवं संस्कृत)',
+  'Social Science (सामाजिक विज्ञान)',
+  'Computer Education (कंप्यूटर शिक्षा)',
+];
+
+const STARTER_PROMPTS = [
+  'मुझे प्रकाश का परावर्तन सरल हिंदी में समझाएं।',
+  'Give me 5 practice questions on Fractions with solutions.',
+  'Explain Computer parts in Hindi and English.',
+  'Help me write an application to the Principal.',
+];
+
+interface ChatMessage {
+  role: 'user' | 'assistant';
   content: string;
 }
 
 export function StudyAssistant() {
-  const { t } = useLanguage();
-  const { data: profile, loading: profileLoading } = useUserProfile();
-
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [selectedClass, setSelectedClass] = useState(SCHOOL_CLASSES[3]);
+  const [selectedSubject, setSelectedSubject] = useState(SCHOOL_SUBJECTS[1]);
+  const [languageMode, setLanguageMode] = useState<'Bilingual' | 'Hindi' | 'English'>('Bilingual');
   const [input, setInput] = useState('');
-  const [isThinking, setIsThinking] = useState(false);
-  const [chatSession, setChatSession] = useState<Chat | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      role: 'assistant',
+      content: 'नमस्ते! Welcome to PMP Memorial Public School AI Study Assistant. Select your class and subject above and ask any question in Hindi or English!',
+    },
+  ]);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const handleSend = async (promptText?: string) => {
+    const query = (promptText ?? input).trim();
+    if (!query || loading) return;
 
-  // Initialize chat session when profile data is ready
-  useEffect(() => {
-    if (profile && !profileLoading) {
-      if (profile.courses && profile.courses.length > 0) {
-        initChatSession();
-      }
-    }
-  }, [profile, profileLoading]);
+    setErrorMsg(null);
+    const updatedMessages: ChatMessage[] = [
+      ...messages,
+      { role: 'user', content: query }
+    ];
+    setMessages(updatedMessages);
+    if (!promptText) setInput('');
+    setLoading(true);
 
-  // Auto-scroll to bottom of messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isThinking]);
-
-  // Auto-resize textarea
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
-    }
-  }, [input]);
-
-  const initChatSession = async () => {
     try {
-      if (!profile?.courses || profile.courses.length === 0) return;
+      const apiKey =
+        (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) ||
+        import.meta.env?.VITE_GEMINI_API_KEY;
 
-      const courseContext = profile.courses.map((c: Course) =>
-        `- ${c.name} (${c.code})\n  taught by ${c.teacher}`
-      ).join('\n');
+      if (!apiKey) {
+        throw new Error('AI service not configured. Contact: 9792954343');
+      }
 
-      const systemInstruction = `You are a helpful study assistant for students at PMP Memorial Public School, Shahpur, Gonda, Uttar Pradesh. You help students understand their coursework and answer academic questions.
+      const ai = new GoogleGenAI({ apiKey });
+      const systemInstruction = `You are the official bilingual AI Study Tutor for PMP Memorial Public School in Shahpur, Gonda, Uttar Pradesh.
+Student Class: ${selectedClass}
+Subject: ${selectedSubject}
+Language: ${languageMode}
+Follow NCERT and UP Board curriculum. Give simple numbered explanations suitable for school students.`;
 
-The student is currently enrolled in these courses:
-${courseContext}
-
-Guidelines:
-- Be encouraging and supportive
-- Keep answers clear and easy to understand
-- Focus on academic topics related to their courses
-- If asked about something unrelated to studies, politely redirect to academic topics
-- Respond in the same language the student uses`;
-
-      const session = await ai.chats.create({
+      const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
-        config: {
-          systemInstruction: systemInstruction,
-        }
+        contents: query,
+        config: { systemInstruction, temperature: 0.4 },
       });
 
-      setChatSession(session);
-      setMessages([]);
-    } catch (error) {
-      toast.error(t('errorAI'));
-    }
-  };
-
-  const handleSend = async () => {
-    if (!input.trim() || !chatSession || isThinking) return;
-
-    const userMessage = input.trim();
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-    setIsThinking(true);
-
-    try {
-      const response = await chatSession.sendMessage({ message: userMessage });
-
-      setMessages(prev => [...prev, {
-        role: 'model',
-        content: response.text
-      }]);
-    } catch (error) {
-      toast.error(t('errorAI'));
+      const reply = response.text || 'Please try rephrasing your question.';
+      setMessages([...updatedMessages, { role: 'assistant', content: reply }]);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unable to connect. Please try again.';
+      setErrorMsg(message);
     } finally {
-      setIsThinking(false);
+      setLoading(false);
     }
   };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  const handleClearChat = () => {
-    initChatSession();
-  };
-
-  if (profileLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D4AF37]"></div>
-      </div>
-    );
-  }
-
-  if (!profile?.courses || profile.courses.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] space-y-4">
-        <Bot className="w-16 h-16 text-[#D4AF37]" />
-        <p className="text-white text-lg">{t('noCoursesAI')}</p>
-      </div>
-    );
-  }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] max-w-4xl mx-auto bg-[#0F1115] rounded-xl border border-[#D4AF37]/20 overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-[#D4AF37]/20 bg-[#1a1a2e]">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-[#D4AF37]/10 rounded-lg">
-            <Bot className="w-6 h-6 text-[#D4AF37]" />
-          </div>
-          <h1 className="text-xl font-semibold text-white">{t('studyAssistant')}</h1>
+    <div className="p-6 max-w-5xl mx-auto text-white space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-neutral-800 pb-4">
+        <div>
+          <h1 className="text-2xl font-serif text-[#D4AF37]">
+            AI Study Assistant
+          </h1>
+          <p className="text-sm text-neutral-400">
+            NCERT & UP Board Bilingual Tutor — PMP Memorial Public School
+          </p>
         </div>
-        {messages.length > 0 && (
-          <button
-            onClick={handleClearChat}
-            className="flex items-center space-x-2 px-3 py-1.5 text-sm text-[#D4AF37] border border-[#D4AF37]/30 hover:bg-[#D4AF37]/10 rounded-lg transition-colors"
+        <div className="flex flex-wrap gap-2">
+          <select
+            value={selectedClass}
+            onChange={(e) => setSelectedClass(e.target.value)}
+            className="bg-neutral-900 border border-neutral-700 rounded px-3 py-1.5 text-sm text-white"
           >
-            <Trash2 className="w-4 h-4" />
-            <span>{t('clearChat')}</span>
-          </button>
-        )}
-      </div>
-
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-4">
-            <Bot className="w-12 h-12 text-[#D4AF37]/50" />
-            <p className="text-center max-w-md">
-              {t('welcomeAI')}
-            </p>
-          </div>
-        ) : (
-          messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`flex space-x-3 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse space-x-reverse' : 'flex-row'}`}>
-                {/* Avatar */}
-                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                  msg.role === 'user' ? 'bg-[#D4AF37]' : 'bg-[#1a1a2e] border border-[#D4AF37]/20'
-                }`}>
-                  {msg.role === 'user' ? (
-                    <User className="w-5 h-5 text-[#0F1115]" />
-                  ) : (
-                    <Bot className="w-5 h-5 text-[#D4AF37]" />
-                  )}
-                </div>
-
-                {/* Message Bubble */}
-                <div
-                  className={`px-4 py-3 ${
-                    msg.role === 'user'
-                      ? 'bg-[#D4AF37] text-[#0F1115] rounded-2xl rounded-br-none self-end'
-                      : 'bg-[#1a1a2e] text-white rounded-2xl rounded-bl-none border border-[#D4AF37]/20 self-start'
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap leading-relaxed">
-                    {msg.content}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-
-        {isThinking && (
-          <div className="flex justify-start">
-            <div className="flex space-x-3 max-w-[85%]">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#1a1a2e] border border-[#D4AF37]/20 flex items-center justify-center">
-                <Bot className="w-5 h-5 text-[#D4AF37]" />
-              </div>
-              <div className="px-4 py-3 bg-[#1a1a2e] text-white rounded-2xl rounded-bl-none border border-[#D4AF37]/20 self-start">
-                <p className="text-gray-400 animate-pulse flex items-center space-x-1">
-                  <span>{t('thinking')}</span>
-                  <span className="flex space-x-0.5">
-                    <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </span>
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input Area */}
-      <div className="p-4 border-t border-[#D4AF37]/20 bg-[#1a1a2e]">
-        <div className="flex items-end space-x-3">
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={t('askQuestion')}
-            disabled={isThinking || !chatSession}
-            rows={1}
-            className="flex-1 bg-[#0F1115] text-white rounded-xl px-4 py-3 border border-[#D4AF37]/20 focus:outline-none focus:border-[#D4AF37] transition-colors disabled:opacity-50 resize-none min-h-[50px] max-h-[120px]"
-            style={{ overflowY: input.split('\n').length > 4 ? 'auto' : 'hidden' }}
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || isThinking || !chatSession}
-            className="flex-shrink-0 flex items-center justify-center w-12 h-12 bg-[#D4AF37] text-[#0F1115] rounded-xl hover:bg-[#b5952f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-0.5"
+            {SCHOOL_CLASSES.map((cls) => (
+              <option key={cls} value={cls}>{cls}</option>
+            ))}
+          </select>
+          <select
+            value={selectedSubject}
+            onChange={(e) => setSelectedSubject(e.target.value)}
+            className="bg-neutral-900 border border-neutral-700 rounded px-3 py-1.5 text-sm text-white"
           >
-            <Send className="w-5 h-5" />
-          </button>
+            {SCHOOL_SUBJECTS.map((sub) => (
+              <option key={sub} value={sub}>{sub}</option>
+            ))}
+          </select>
+          <select
+            value={languageMode}
+            onChange={(e) => setLanguageMode(e.target.value as 'Bilingual' | 'Hindi' | 'English')}
+            className="bg-neutral-900 border border-[#D4AF37]/50 rounded px-3 py-1.5 text-sm text-[#D4AF37]"
+          >
+            <option value="Bilingual">Bilingual</option>
+            <option value="Hindi">Hindi Medium</option>
+            <option value="English">English Medium</option>
+          </select>
         </div>
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        {STARTER_PROMPTS.map((prompt) => (
+          <button
+            key={prompt}
+            onClick={() => handleSend(prompt)}
+            className="text-left text-xs bg-neutral-900/80 hover:bg-neutral-800 border border-neutral-800 hover:border-[#D4AF37]/50 rounded-lg p-3 text-neutral-300 transition"
+          >
+            {prompt}
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-neutral-950 border border-neutral-800 rounded-xl p-4 h-[420px] overflow-y-auto space-y-4">
+        {messages.map((m, idx) => (
+          <div
+            key={idx}
+            className={`p-3.5 rounded-lg max-w-3xl whitespace-pre-wrap text-sm leading-relaxed ${
+              m.role === 'user'
+                ? 'ml-auto bg-[#D4AF37] text-black font-medium'
+                : 'mr-auto bg-neutral-900 text-neutral-100 border border-neutral-800'
+            }`}
+          >
+            {m.content}
+          </div>
+        ))}
+        {loading && (
+          <div className="text-xs text-[#D4AF37] animate-pulse">
+            Preparing your explanation...
+          </div>
+        )}
+        {errorMsg && (
+          <div className="p-3 rounded bg-red-950/60 border border-red-700 text-red-200 text-xs">
+            {errorMsg}
+          </div>
+        )}
+      </div>
+
+      <form
+        onSubmit={(e) => { e.preventDefault(); handleSend(); }}
+        className="flex gap-3"
+      >
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Ask any question in Hindi or English..."
+          className="flex-1 bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-[#D4AF37] hover:bg-[#b5952f] disabled:opacity-50 text-black font-semibold px-6 py-3 rounded-lg text-sm transition"
+        >
+          Send
+        </button>
+      </form>
     </div>
   );
 }
