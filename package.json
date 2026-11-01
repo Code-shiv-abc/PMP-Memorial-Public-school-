@@ -39,6 +39,7 @@
     "@types/express": "^4.17.21",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.14.0",
+    "@vercel/node": "^29.0.1",
     "autoprefixer": "^10.4.21",
     "eslint": "^10.2.1",
     "sanity": "^6.1.0",

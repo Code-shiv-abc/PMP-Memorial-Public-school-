@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { GoogleGenAI } from '@google/genai';
 
 const SCHOOL_CLASSES = [
   'PG – Class 2 (English Medium)',
@@ -58,29 +57,26 @@ export function StudyAssistant() {
     setLoading(true);
 
     try {
-      const apiKey =
-        process.env.GEMINI_API_KEY ||
-        import.meta.env.VITE_GEMINI_API_KEY;
-
-      if (!apiKey) {
-        throw new Error('AI service not configured. Contact: 9792954343');
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
-      const systemInstruction = `You are the official bilingual AI Study Tutor for PMP Memorial Public School in Shahpur, Gonda, Uttar Pradesh.
-Student Class: ${selectedClass}
-Subject: ${selectedSubject}
-Language: ${languageMode}
-Follow NCERT and UP Board curriculum. Give simple numbered explanations suitable for school students.`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents: query,
-        config: { systemInstruction, temperature: 0.4 },
+      const response = await fetch('/api/study-assistant', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query,
+          selectedClass,
+          selectedSubject,
+          languageMode,
+        }),
       });
 
-      const reply = response.text || 'Please try rephrasing your question.';
-      setMessages([...updatedMessages, { role: 'assistant', content: reply }]);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to connect. Please try again.');
+      }
+
+      setMessages([...updatedMessages, { role: 'assistant', content: data.reply }]);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unable to connect. Please try again.';
       setErrorMsg(message);
