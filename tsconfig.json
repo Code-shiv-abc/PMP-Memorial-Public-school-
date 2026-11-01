@@ -27,7 +27,8 @@
     "src/**/*",
     "lib/**/*",
     "vite.config.ts",
-    "components/**/*"
+    "components/**/*",
+    "api/**/*"
   ],
   "exclude": [
     "node_modules",
