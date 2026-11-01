@@ -59,8 +59,8 @@ export function StudyAssistant() {
 
     try {
       const apiKey =
-        (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) ||
-        import.meta.env?.VITE_GEMINI_API_KEY;
+        process.env.GEMINI_API_KEY ||
+        import.meta.env.VITE_GEMINI_API_KEY;
 
       if (!apiKey) {
         throw new Error('AI service not configured. Contact: 9792954343');
