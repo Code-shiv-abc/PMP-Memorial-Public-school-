@@ -5,6 +5,28 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function requiresMainModel(query: string, selectedClass: string): boolean {
+  if (query.length > 150) return true;
+
+  const hasDigit = /\d/.test(query);
+  const hasOperator = /[+\-*/=^]/.test(query);
+  if (hasDigit && hasOperator) return true;
+
+  const keywords = [
+    'solve', 'prove', 'why', 'explain', 'step',
+    'derive', 'essay', 'calculate', 'numerical', 'difference',
+    'समझाएं', 'क्यों', 'हल', 'सिद्ध', 'गणना'
+  ];
+  const queryLower = query.toLowerCase();
+  if (keywords.some(kw => queryLower.includes(kw))) return true;
+
+  if (selectedClass && (selectedClass.startsWith('Class 9') || selectedClass.startsWith('Class 11'))) {
+    return true;
+  }
+
+  return false;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -21,7 +43,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
-  const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const mainModel = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const fastModel = process.env.GEMINI_MODEL_FAST;
 
   if (!apiKey) {
     console.error('Server configuration error: GEMINI_API_KEY is missing');
@@ -35,43 +58,87 @@ Subject: ${selectedSubject || 'Unknown'}
 Language: ${languageMode || 'Bilingual'}
 Follow NCERT and UP Board curriculum. Give simple numbered explanations suitable for school students.`;
 
-  let attempt = 1;
-  const maxAttempts = 3;
+  const useMain = !fastModel || requiresMainModel(query, selectedClass);
 
-  while (attempt <= maxAttempts) {
-    try {
-      const response = await ai.models.generateContent({
-        model,
-        contents: query,
-        config: { systemInstruction, temperature: 0.4 },
-      });
+  async function callMainModel() {
+    let attempt = 1;
+    const maxAttempts = 3;
 
-      const reply = response.text || 'Please try rephrasing your question.';
-      return res.status(200).json({ reply });
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
+    while (attempt <= maxAttempts) {
+      try {
+        console.log("study-assistant model:", mainModel);
+        const response = await ai.models.generateContent({
+          model: mainModel,
+          contents: query,
+          config: { systemInstruction, temperature: 0.4 },
+        });
 
-      console.error(`AI generateContent error (attempt ${attempt}):`, errorMessage);
+        const reply = response.text || 'Please try rephrasing your question.';
+        return res.status(200).json({ reply });
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        console.error(`AI generateContent error (main model, attempt ${attempt}):`, errorMessage);
 
-      const isBusyError = errorMessage.includes('503') || errorMessage.includes('UNAVAILABLE');
+        const isBusyError = errorMessage.includes('503') || errorMessage.includes('UNAVAILABLE');
 
-      if (isBusyError) {
-        if (attempt === 1) {
-          await wait(2000);
-        } else if (attempt === 2) {
-          await wait(4000);
+        if (isBusyError) {
+          if (attempt === 1) {
+            await wait(2000);
+          } else if (attempt === 2) {
+            await wait(4000);
+          } else {
+            return res.status(503).json({
+              error: 'The AI is very busy right now. Please try again in a minute.'
+            });
+          }
+          attempt++;
         } else {
-          // Attempt 3 failed
-          return res.status(503).json({
-            error: 'The AI is very busy right now. Please try again in a minute.'
+          return res.status(500).json({
+            error: 'The AI is unavailable right now. Please contact 9792954343.'
           });
         }
-        attempt++;
-      } else {
-        // Stop immediately on other errors
-        return res.status(500).json({
-          error: 'The AI is unavailable right now. Please contact 9792954343.'
+      }
+    }
+  }
+
+  if (useMain) {
+    return callMainModel();
+  } else {
+    let attempt = 1;
+    const maxAttempts = 2;
+
+    while (attempt <= maxAttempts) {
+      try {
+        console.log("study-assistant model:", fastModel);
+        const response = await ai.models.generateContent({
+          model: fastModel,
+          contents: query,
+          config: { systemInstruction, temperature: 0.4 },
         });
+
+        const reply = response.text || 'Please try rephrasing your question.';
+        return res.status(200).json({ reply });
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        console.error(`AI generateContent error (fast model, attempt ${attempt}):`, errorMessage);
+
+        const isBusyError = errorMessage.includes('503') || errorMessage.includes('UNAVAILABLE');
+        const isNotFoundError = errorMessage.includes('404') || errorMessage.includes('NOT_FOUND');
+
+        if (isNotFoundError) {
+          return callMainModel();
+        } else if (isBusyError) {
+          if (attempt === 1) {
+            await wait(2000);
+            attempt++;
+          } else {
+            return callMainModel();
+          }
+        } else {
+          return res.status(500).json({
+            error: 'The AI is unavailable right now. Please contact 9792954343.'
+          });
+        }
       }
     }
   }
