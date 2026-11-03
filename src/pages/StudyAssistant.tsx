@@ -1,4 +1,51 @@
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+
+function cleanMath(text: string): string {
+  if (!text || !/[$\\\^]/.test(text)) return text;
+  return text
+    .replace(/\$\$/g, '')
+    .replace(/\$/g, '')
+    .replace(/\\\(/g, '')
+    .replace(/\\\)/g, '')
+    .replace(/\\\[/g, '')
+    .replace(/\\\]/g, '')
+    .replace(/\\angle/g, '∠')
+    .replace(/\^\\circ/g, '°')
+    .replace(/\\circ/g, '°')
+    .replace(/\\times/g, '×')
+    .replace(/\\cdot/g, '·')
+    .replace(/\\theta/g, 'θ')
+    .replace(/\\pi/g, 'π')
+    .replace(/\\Delta/g, 'Δ')
+    .replace(/\\degree/g, '°')
+    .replace(/\\rightarrow/g, '→')
+    .replace(/\\sqrt\{([^}]*)\}/g, '√$1')
+    .replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g, '($1)/($2)')
+    .replace(/\^2/g, '²')
+    .replace(/\^3/g, '³');
+}
+
+const MemoizedMarkdown = React.memo(({ content }: { content: string }) => {
+  return (
+    <ReactMarkdown
+      components={{
+        h1: ({ children }) => <h1 className="font-serif text-[#D4AF37] font-semibold mt-2">{children}</h1>,
+        h2: ({ children }) => <h2 className="font-serif text-[#D4AF37] font-semibold mt-2">{children}</h2>,
+        h3: ({ children }) => <h3 className="font-serif text-[#D4AF37] font-semibold mt-2">{children}</h3>,
+        p: ({ children }) => <p className="leading-relaxed my-2">{children}</p>,
+        strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
+        ul: ({ children }) => <ul className="pl-6 list-disc my-1">{children}</ul>,
+        ol: ({ children }) => <ol className="pl-6 list-decimal my-1">{children}</ol>,
+        hr: () => <hr className="border-[#D4AF37]/20 my-2" />,
+        pre: ({ children }) => <pre className="bg-black/30 rounded overflow-x-auto p-2 my-2">{children}</pre>,
+        code: ({ children }) => <code className="bg-black/30 rounded px-1">{children}</code>
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+});
 
 const SCHOOL_CLASSES = [
   'PG – Class 2 (English Medium)',
@@ -194,13 +241,17 @@ export function StudyAssistant() {
                   </div>
                 )}
                 <div
-                  className={`p-4 rounded-2xl whitespace-pre-wrap text-sm leading-relaxed shadow-sm ${
+                  className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
                     m.role === 'user'
-                      ? 'bg-[#D4AF37] text-black font-medium rounded-br-sm'
+                      ? 'bg-[#D4AF37] text-black font-medium rounded-br-sm whitespace-pre-wrap'
                       : 'bg-[#1a1a2e] text-neutral-100 border border-[#D4AF37]/20 rounded-bl-sm'
                   }`}
                 >
-                  {m.content}
+                  {m.role === 'user' ? (
+                    m.content
+                  ) : (
+                    <MemoizedMarkdown content={cleanMath(m.content)} />
+                  )}
                 </div>
               </div>
             </div>
