@@ -1,31 +1,6 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
-function cleanMath(text: string): string {
-  if (!text || !/[$\\\^]/.test(text)) return text;
-  return text
-    .replace(/\$\$/g, '')
-    .replace(/\$/g, '')
-    .replace(/\\\(/g, '')
-    .replace(/\\\)/g, '')
-    .replace(/\\\[/g, '')
-    .replace(/\\\]/g, '')
-    .replace(/\\angle/g, '∠')
-    .replace(/\^\\circ/g, '°')
-    .replace(/\\circ/g, '°')
-    .replace(/\\times/g, '×')
-    .replace(/\\cdot/g, '·')
-    .replace(/\\theta/g, 'θ')
-    .replace(/\\pi/g, 'π')
-    .replace(/\\Delta/g, 'Δ')
-    .replace(/\\degree/g, '°')
-    .replace(/\\rightarrow/g, '→')
-    .replace(/\\sqrt\{([^}]*)\}/g, '√$1')
-    .replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g, '($1)/($2)')
-    .replace(/\^2/g, '²')
-    .replace(/\^3/g, '³');
-}
-
 const MemoizedMarkdown = React.memo(({ content }: { content: string }) => {
   return (
     <ReactMarkdown
@@ -250,7 +225,7 @@ export function StudyAssistant() {
                   {m.role === 'user' ? (
                     m.content
                   ) : (
-                    <MemoizedMarkdown content={cleanMath(m.content)} />
+                    <MemoizedMarkdown content={m.content} />
                   )}
                 </div>
               </div>
