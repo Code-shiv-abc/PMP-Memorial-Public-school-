@@ -7,11 +7,11 @@ import { useUserProfile } from "@/src/hooks/useUserProfile";
 import { useLanguage } from "@/src/context/LanguageContext";
 import toast from "react-hot-toast";
 
-export default function MainLayout() {
+export function MainLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
-  const { user, loading } = useUserProfile();
+  const { authUser: user, loading } = useUserProfile();
   const { language, setLanguage } = useLanguage();
   const isHi = language === "hi";
   const location = useLocation();
@@ -346,3 +346,5 @@ export default function MainLayout() {
     </div>
   );
 }
+
+export default MainLayout;
