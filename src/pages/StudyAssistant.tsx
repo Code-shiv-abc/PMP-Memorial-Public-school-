@@ -1,10 +1,6 @@
 import React, { useState, useRef, useEffect, memo } from 'react';
 import { Send, Bot, User, Sparkles, BookOpen, Languages, GraduationCap, Trash2, Zap, HelpCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import 'katex/dist/katex.min.css';
 import { useLanguage } from '../context/LanguageContext';
 
 interface Message {
@@ -81,8 +77,6 @@ function setClientCache(key: string, reply: string) {
 const MemoizedMarkdown = memo(({ text }: { text: string }) => {
   return (
     <ReactMarkdown
-      remarkPlugins={[remarkGfm, remarkMath]}
-      rehypePlugins={[rehypeKatex]}
       components={{
         p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
         ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>,
@@ -128,7 +122,9 @@ const MemoizedMarkdown = memo(({ text }: { text: string }) => {
 MemoizedMarkdown.displayName = 'MemoizedMarkdown';
 
 export default function StudyAssistant() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
+  const isHi = language === 'hi';
+
   const [selectedClass, setSelectedClass] = useState(SCHOOL_CLASSES[3]);
   const [selectedSubject, setSelectedSubject] = useState(SUBJECTS[1]);
   const [languageMode, setLanguageMode] = useState(LANGUAGE_MODES[0]);
@@ -189,7 +185,7 @@ export default function StudyAssistant() {
 
     setIsLoading(true);
     setCooldown(true);
-    setTimeout(() => setCooldown(false), 2500); // 2.5s cooldown prevents rapid double-click RPM drain
+    setTimeout(() => setCooldown(false), 2500);
 
     try {
       const response = await fetch('/api/study-assistant', {
@@ -250,12 +246,18 @@ export default function StudyAssistant() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-serif font-bold text-white tracking-tight">{t('studyAssistantTitle')}</h1>
+              <h1 className="text-lg font-serif font-bold text-white tracking-tight">
+                {isHi ? 'विद्या AI (Vidya AI - अध्ययन सहायिका)' : 'Vidya AI Study Assistant'}
+              </h1>
               <span className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-amber-500/20 text-amber-400 rounded-full border border-amber-500/30">
                 PMP Scholar
               </span>
             </div>
-            <p className="text-xs text-neutral-300">{t('studyAssistantDesc')}</p>
+            <p className="text-xs text-neutral-300">
+              {isHi
+                ? 'पी. एम. पी. मेमोरियल पब्लिक स्कूल • NCERT एवं UP बोर्ड द्विभाषी ट्यूटर'
+                : 'P.M.P. Memorial Public School • Bilingual NCERT & UP Board AI Tutor'}
+            </p>
           </div>
         </div>
 
@@ -268,7 +270,7 @@ export default function StudyAssistant() {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-700 transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5 text-amber-400" />
-              <span>{t('clearChat') || 'Clear Chat'}</span>
+              <span>{t('clearChat')}</span>
             </button>
           )}
         </div>
@@ -278,7 +280,9 @@ export default function StudyAssistant() {
       <div className="p-3 sm:px-6 bg-neutral-900/90 border-b border-neutral-800 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
         <div className="flex items-center gap-2 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5">
           <GraduationCap className="w-4 h-4 text-amber-400 shrink-0" />
-          <label htmlFor="vidya-class-select" className="text-neutral-300 shrink-0">{t('class')}:</label>
+          <label htmlFor="vidya-class-select" className="text-neutral-300 shrink-0">
+            {isHi ? 'कक्षा:' : 'Class:'}
+          </label>
           <select
             id="vidya-class-select"
             value={selectedClass}
@@ -293,7 +297,9 @@ export default function StudyAssistant() {
 
         <div className="flex items-center gap-2 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5">
           <BookOpen className="w-4 h-4 text-amber-400 shrink-0" />
-          <label htmlFor="vidya-subject-select" className="text-neutral-300 shrink-0">{t('subject')}:</label>
+          <label htmlFor="vidya-subject-select" className="text-neutral-300 shrink-0">
+            {isHi ? 'विषय:' : 'Subject:'}
+          </label>
           <select
             id="vidya-subject-select"
             value={selectedSubject}
@@ -308,7 +314,9 @@ export default function StudyAssistant() {
 
         <div className="flex items-center gap-2 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5">
           <Languages className="w-4 h-4 text-amber-400 shrink-0" />
-          <label htmlFor="vidya-lang-select" className="text-neutral-300 shrink-0">{t('medium')}:</label>
+          <label htmlFor="vidya-lang-select" className="text-neutral-300 shrink-0">
+            {isHi ? 'माध्यम:' : 'Medium:'}
+          </label>
           <select
             id="vidya-lang-select"
             value={languageMode}
@@ -445,7 +453,7 @@ export default function StudyAssistant() {
                 handleSend();
               }
             }}
-            placeholder={t('askPlaceholder')}
+            placeholder={isHi ? 'अपना प्रश्न हिंदी या अंग्रेजी में लिखें...' : 'Ask any question in Hindi or English...'}
             className="flex-1 bg-neutral-900 border border-neutral-800 focus:border-amber-500/50 rounded-xl px-4 py-2.5 text-sm text-white placeholder-neutral-400 focus:outline-none resize-none"
           />
           <button
@@ -455,7 +463,7 @@ export default function StudyAssistant() {
             className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:hover:bg-amber-500 text-neutral-950 font-serif font-semibold text-sm transition-colors flex items-center gap-1.5 shrink-0"
           >
             <Send className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('askButton')}</span>
+            <span className="hidden sm:inline">{t('send')}</span>
           </button>
         </form>
         <p className="text-[11px] text-neutral-400 text-center mt-2">
