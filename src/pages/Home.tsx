@@ -1,211 +1,301 @@
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { motion, useInView, useSpring, useTransform } from "motion/react";
-import { useRef, useEffect } from "react";
-
-function Counter({ value, suffix = "" }: { value: number, suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true });
-  const spring = useSpring(0, {
-    mass: 1,
-    stiffness: 75,
-    damping: 15,
-  });
-  const display = useTransform(spring, (current) =>
-    Math.round(current) + suffix);
-  useEffect(() => {
-    if (inView) {
-      spring.set(value);
-    }
-  }, [inView, spring, value]);
-  return <motion.span ref={ref}>{display}</motion.span>;
-}
-
-const fadeIn = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
-};
-
-const stagger = {
-  animate: {
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
+import { motion } from "motion/react";
+import { ArrowRight, BookOpen, Shield, Award, Sparkles, Phone, CheckCircle2, GraduationCap, Monitor } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function Home() {
+  const { language } = useLanguage();
+  const isHi = language === "hi";
+
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Immersive Hero Section */}
-      <section className="relative h-[90vh] min-h-[600px] flex items-center justify-center overflow-hidden bg-background">
-        <motion.div 
-          initial={{ scale: 1.05 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
-          className="absolute inset-0 bg-[#0A0A0A]"
-        >
-          {/* We use a subtle abstract gradient if no image is present, making it highly premium */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-background to-background opacity-80" />
-          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background to-transparent" />
-        </motion.div>
-        
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <motion.div 
-            initial="initial"
-            animate="animate"
-            variants={stagger}
-            className="max-w-4xl"
-          >
-            <motion.h1 variants={fadeIn} className="text-6xl md:text-8xl lg:text-[7.5rem] font-serif font-medium text-foreground mb-4 leading-[1.05] tracking-tight">
-              PMP Memorial<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/50 italic pr-4">Public School</span>
-            </motion.h1>
-
-            <motion.p variants={fadeIn} className="text-2xl font-serif text-[#D4AF37] mb-2">
-              पी.एम.पी. मेमोरियल पब्लिक स्कूल, शाहपुर-गोंडा
-            </motion.p>
-
-            <motion.p variants={fadeIn} className="text-xl text-muted-foreground mb-2">
-              Shahpur, Gonda, Uttar Pradesh
-            </motion.p>
-
-            <motion.p variants={fadeIn} className="text-lg text-[#D4AF37]/80 italic mb-8">
-              क्षेत्र का सबसे विश्वसनीय शिक्षा का केन्द्र
-            </motion.p>
-            
-            <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-4 mt-8">
-              <Link to="/admissions">
-                <Button className="bg-[#D4AF37] text-[#0F1115] hover:bg-[#b5952f] font-semibold px-8 py-3 text-base">
-                  प्रवेश लें — Apply Now
-                </Button>
-              </Link>
-              <Link to="/about">
-                <Button variant="outline" className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0F1115] px-8 py-3 text-base">
-                  हमारे बारे में — About Us
-                </Button>
-              </Link>
-            </motion.div>
-          </motion.div>
+    <div className="bg-background text-foreground">
+      {/* 1. Hero Section — Responsive typography for 320px–1920px screens */}
+      <section className="relative min-h-[82vh] flex items-center justify-center overflow-hidden border-b border-border py-16">
+        <div className="absolute inset-0 z-0 bg-[#0F1115]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-[#D4AF37]/15 via-[#0F1115]/90 to-[#0F1115]" />
         </div>
-      </section>
 
-      {/* Horizontal Stats Bar */}
-      <section className="py-16 border-y border-border/50 bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-8"
-          >
-            {[
-              { value: "98%", label: "Parent Satisfaction", hindi: "अभिभावक संतुष्टि" },
-              { value: "3-12", label: "Hindi Medium Classes", hindi: "हिन्दी माध्यम" },
-              { value: "PG-8", label: "English Medium Classes", hindi: "अंग्रेजी माध्यम" },
-              { value: "Free", label: "Computer Education", hindi: "कम्प्यूटर शिक्षा" },
-            ].map((stat, i) => (
-              <div key={i} className="text-center p-6 border border-border/50 rounded-xl hover:border-[#D4AF37]/40 transition-colors">
-                <div className="text-4xl md:text-5xl font-serif font-bold text-[#D4AF37] mb-2">{stat.value}</div>
-                <div className="text-sm font-medium text-foreground mb-1">
-                  {stat.label}
-                </div>
-                <div className="text-xs text-muted-foreground">{stat.hindi}</div>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Narrative Section */}
-      <section className="py-32 bg-card border-y border-border/50 overflow-hidden relative">
-        <div className="absolute right-0 top-0 w-1/3 h-full bg-primary/5 blur-[100px] pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
-             <motion.div 
-               initial={{ opacity: 0, x: -40 }}
-               whileInView={{ opacity: 1, x: 0 }}
-               viewport={{ once: true }}
-               transition={{ duration: 0.8 }}
-             >
-                <Badge variant="outline" className="border-border text-foreground uppercase tracking-[0.2em] mb-8 font-medium bg-transparent">हमारी विशेषताएं</Badge>
-                <h2 className="text-4xl md:text-5xl font-serif font-medium leading-[1.1] text-foreground mb-8">
-                  Quality Education for <span className="italic text-primary">Every Child</span>
-                </h2>
-                <div className="w-full h-[1px] bg-border mb-8" />
-                <p className="text-lg text-muted-foreground font-light leading-relaxed mb-4">
-                  PMP Memorial Public School provides disciplined, modern education in a safe and peaceful environment. We offer free computer education from Class 3 to 12 and free coaching for Classes 9 to 12.
-                </p>
-                <p className="text-lg text-muted-foreground font-light leading-relaxed mb-10">
-                  With NTT trained teachers for Nursery and KG, experienced faculty throughout, and 98% parent satisfaction — we are the most trusted education center in Shahpur, Gonda.
-                </p>
-             </motion.div>
-             <motion.div 
-               initial={{ opacity: 0, scale: 0.95 }}
-               whileInView={{ opacity: 1, scale: 1 }}
-               viewport={{ once: true }}
-               transition={{ duration: 1 }}
-               className="aspect-[4/5] bg-[#1a1a2e] relative border border-[#D4AF37]/20 rounded-xl flex items-center justify-center"
-             >
-               <p className="text-[#D4AF37]/40 text-sm text-center px-8">
-                 School photo coming soon
-               </p>
-               <div className="absolute bottom-8 left-8 right-8 bg-[#0F1115]/80 backdrop-blur-md p-6 border border-[#D4AF37]/20">
-                  <p className="font-serif italic text-lg text-white mb-2">
-                    "उद्यमेन हि सिध्यन्ति कार्याणि न मनोरथैः।<br />
-                    न हि सुप्तस्य सिंहस्य प्रविशन्ति मुखे मृगाः॥"
-                  </p>
-                  <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]/60">— Sanskrit Proverb</p>
-               </div>
-             </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Bulletin / Updates (Refined) */}
-      <section className="py-32 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
-            <motion.div 
-               initial={{ opacity: 0, y: 20 }}
-               whileInView={{ opacity: 1, y: 0 }}
-               viewport={{ once: true }}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full">
+          <div className="max-w-4xl">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
             >
-              <h2 className="text-4xl md:text-5xl font-serif font-medium text-foreground mb-4">The Bulletin</h2>
-              <p className="text-muted-foreground max-w-xl font-light">Latest dispatches, academic schedules, and institutional events.</p>
+              <span
+                className="inline-block py-1 px-3 border border-primary/40 bg-primary/10 text-primary text-xs tracking-[0.2em] uppercase mb-6 font-medium"
+                lang="hi"
+              >
+                उ.प्र. सरकार द्वारा मान्यता प्राप्त • शाहपुर, गोंडा
+              </span>
+              <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[5.25rem] font-serif text-foreground leading-[1.08] tracking-tight mb-4">
+                P.M.P. Memorial <br />
+                <span className="italic font-light text-primary">Public School.</span>
+              </h1>
+              <p className="text-xl sm:text-2xl md:text-3xl font-serif text-primary/90 mb-4" lang="hi">
+                पी. एम. पी. मेमोरियल पब्लिक स्कूल, शाहपुर - गोंडा
+              </p>
             </motion.div>
-          </div>
 
-          <div className="grid grid-cols-1 gap-4 mt-8">
-            {[
-              { tag: "Admissions", title: "प्रवेश प्रारम्भ — Admissions Open for 2026-27", date: "01 Apr 2026" },
-              { tag: "Academic", title: "Free Computer Education — Class 3 to 12", date: "Ongoing" },
-              { tag: "Notice", title: "Registration fee waived for girls in Class 9 & 11", date: "Annual" },
-            ].map((item, i) => (
-              <div key={i} className="py-6 border-b border-border/50 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center hover:bg-card/50 transition-colors px-4 -mx-4">
-                <div className="flex-1">
-                  <span className="text-[10px] text-[#D4AF37] uppercase tracking-[0.2em] font-bold mb-2 block">{item.tag}</span>
-                  <h3 className="text-lg font-serif text-foreground leading-tight">{item.title}</h3>
-                </div>
-                <span className="text-sm text-muted-foreground font-light shrink-0">{item.date}</span>
-              </div>
-            ))}
-          </div>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.15 }}
+              className="text-base sm:text-lg md:text-xl text-muted-foreground font-light leading-relaxed max-w-2xl mb-8"
+            >
+              <span className="text-foreground font-medium" lang="hi">
+                “क्षेत्र का सबसे विश्वसनीय शिक्षा का केन्द्र”
+              </span>{" "}
+              — Offering quality education in{" "}
+              <strong className="text-foreground">English Medium (Playgroup to Class 8)</strong> and{" "}
+              <strong className="text-foreground">Hindi Medium (Class 3 to Class 12)</strong> with free computer education and board exam coaching.
+            </motion.p>
 
-          <div className="text-center py-8 mt-4">
-            <p className="text-[#D4AF37]/60 text-sm mt-2">
-              Contact: Sunil Kumar Tiwari — 9792954343
-            </p>
-            <p className="text-[#D4AF37]/60 text-xs mt-4">
-              Real-time announcements coming soon via Sanity CMS
-            </p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.3 }}
+              className="flex flex-wrap gap-4 items-center"
+            >
+              <Link
+                to="/admissions"
+                className="px-7 py-4 bg-primary text-primary-foreground font-serif font-semibold text-xs uppercase tracking-[0.2em] hover:bg-primary/90 transition-all flex items-center gap-3 group"
+              >
+                <span>प्रवेश प्रारम्भ — Apply Now</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                to="/about"
+                className="px-7 py-4 border border-border text-foreground font-serif font-semibold text-xs uppercase tracking-[0.2em] hover:bg-secondary transition-all"
+              >
+                हमारे बारे में — About Us
+              </Link>
+              <a
+                href="tel:+919792954343"
+                className="px-5 py-4 border border-primary/40 text-primary font-serif font-semibold text-xs uppercase tracking-[0.15em] hover:bg-primary/10 transition-all inline-flex items-center gap-2"
+              >
+                <Phone className="w-4 h-4" />
+                <span>Call: 9792954343</span>
+              </a>
+            </motion.div>
           </div>
         </div>
       </section>
 
+      {/* 2. Key Institutional Metrics Bar */}
+      <section className="border-b border-border bg-card">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border">
+            <div className="py-8 md:px-6 first:pl-0">
+              <p className="text-primary text-xs font-serif font-semibold uppercase tracking-widest mb-2">
+                Parent Trust
+              </p>
+              <div className="text-4xl lg:text-5xl font-serif text-foreground mb-1">98%</div>
+              <p className="text-xs text-muted-foreground">Parent satisfaction across Shahpur &amp; Gonda</p>
+            </div>
+            <div className="py-8 md:px-6">
+              <p className="text-primary text-xs font-serif font-semibold uppercase tracking-widest mb-2">
+                Hindi Medium (UP Board)
+              </p>
+              <div className="text-4xl lg:text-5xl font-serif text-foreground mb-1">Class 3–12</div>
+              <p className="text-xs text-muted-foreground">Complete Primary, High School &amp; Intermediate</p>
+            </div>
+            <div className="py-8 md:px-6">
+              <p className="text-primary text-xs font-serif font-semibold uppercase tracking-widest mb-2">
+                English Medium
+              </p>
+              <div className="text-4xl lg:text-5xl font-serif text-foreground mb-1">PG – Class 8</div>
+              <p className="text-xs text-muted-foreground">Playgroup, Nursery, LKG, UKG to Class 8</p>
+            </div>
+            <div className="py-8 md:px-6 last:pr-0">
+              <p className="text-primary text-xs font-serif font-semibold uppercase tracking-widest mb-2">
+                Computer &amp; Coaching
+              </p>
+              <div className="text-4xl lg:text-5xl font-serif text-foreground mb-1">100% Free</div>
+              <p className="text-xs text-muted-foreground">Free Computer Lab (3–12) &amp; Coaching (9–12)</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Academic Pillars & Campus Highlights (Replaces "School photo coming soon" placeholder) */}
+      <section className="py-20 lg:py-28 border-b border-border">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+            <div className="lg:col-span-5 lg:sticky lg:top-28">
+              <span className="text-primary text-xs font-serif font-semibold uppercase tracking-[0.2em] block mb-4">
+                विशेष सुविधाएं • Our Pillars
+              </span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-foreground leading-tight mb-6">
+                Modern Education Rooted in Indian Values.
+              </h2>
+              <p className="text-muted-foreground font-light leading-relaxed mb-6">
+                P.M.P. Memorial Public School is recognized by the Uttar Pradesh Government (उ.प्र. सरकार द्वारा मान्यता प्राप्त). Under the guidance of TET, CTET, and NET qualified educators, we ensure every child receives personal attention and modern digital skills.
+              </p>
+
+              {/* Verified Campus Highlights Card (Replaces broken empty placeholder box) */}
+              <div className="p-6 rounded-2xl bg-card border border-primary/30 space-y-4 mb-6">
+                <div className="flex items-center justify-between border-b border-border pb-3">
+                  <div>
+                    <h3 className="text-base font-serif font-bold text-foreground" lang="hi">
+                      शिक्षार्थ आइये, सेवार्थ जाइये
+                    </h3>
+                    <p className="text-xs text-muted-foreground">Shahpur, Rek Sadiya, District Gonda (UP)</p>
+                  </div>
+                  <GraduationCap className="w-7 h-7 text-primary shrink-0" />
+                </div>
+                <ul className="space-y-2.5 text-xs text-foreground">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                    <span><strong>Girls Fee Waiver:</strong> 100% Free Registration for girls in Class 9 &amp; 11</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                    <span><strong>Vidya AI Tutor:</strong> 24×7 Bilingual NCERT &amp; UP Board AI Study Assistant</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                    <span><strong>Safe Transport:</strong> Dedicated school vehicle facility for nearby villages</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                    <span><strong>CCTV Campus:</strong> Full CCTV surveillance with electricity &amp; pure water</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="p-5 bg-card border border-border rounded-xl">
+                <p className="text-sm font-serif text-primary italic mb-2" lang="sa">
+                  “उद्यमेन हि सिध्यन्ति कार्याणि न मनोरथैः।”
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed" lang="hi">
+                  परिश्रम से ही सभी कार्य सफल होते हैं, केवल इच्छा करने से नहीं।
+                </p>
+              </div>
+            </div>
+
+            <div className="lg:col-span-7 space-y-10">
+              <div className="group border-b border-border pb-10">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-mono text-primary">01 / FREE ACADEMIC COACHING &amp; GIRLS SCHOLARSHIP</span>
+                  <BookOpen className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                </div>
+                <h3 className="text-2xl font-serif text-foreground mb-3 group-hover:text-primary transition-colors">
+                  Free Coaching (Class 9–12) &amp; Girls Fee Waiver
+                </h3>
+                <p className="text-muted-foreground font-light leading-relaxed mb-4">
+                  We provide completely free coaching classes for Class 9 to 12 students so families do not have to pay for private tuition. Furthermore, registration fees are <strong>100% waived for girls</strong> taking admission in Class 9 and Class 11.
+                </p>
+                <Link to="/admissions" className="inline-flex items-center gap-2 text-xs text-primary font-serif uppercase tracking-widest hover:underline">
+                  <span>Register for Class 9–12 Admission</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+
+              <div className="group border-b border-border pb-10">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-mono text-primary">02 / DIGITAL &amp; AI-ENABLED LEARNING</span>
+                  <Monitor className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                </div>
+                <h3 className="text-2xl font-serif text-foreground mb-3 group-hover:text-primary transition-colors">
+                  Free Computer Education (Class 3–12) &amp; Vidya AI
+                </h3>
+                <p className="text-muted-foreground font-light leading-relaxed mb-4">
+                  Every student from Class 3 to Class 12 receives hands-on computer education at zero extra cost. Students also get access to <strong>Vidya AI</strong>, our bilingual Hindi/English study assistant tailored for UP Board and NCERT chapters.
+                </p>
+                <Link to="/portal/study-assistant" className="inline-flex items-center gap-2 text-xs text-primary font-serif uppercase tracking-widest hover:underline">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Try Vidya AI Study Tutor</span>
+                </Link>
+              </div>
+
+              <div className="group pb-2">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-mono text-primary">03 / EXPERIENCED LEADERSHIP &amp; SAFE CAMPUS</span>
+                  <Shield className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                </div>
+                <h3 className="text-2xl font-serif text-foreground mb-3 group-hover:text-primary transition-colors">
+                  Qualified Educators (M.A., B.Ed., TET, CTET, NET)
+                </h3>
+                <p className="text-muted-foreground font-light leading-relaxed mb-4">
+                  Founded by Shri A.K. Tripathi (M.A., B.Ed., TET, CTET) and managed by Shri Arvind Kumar Tiwari (M.A., B.Ed., NET), our faculty conducts monthly evaluations, science/math fairs, and sports competitions in a fully CCTV-monitored environment.
+                </p>
+                <Link to="/faculty" className="inline-flex items-center gap-2 text-xs text-primary font-serif uppercase tracking-widest hover:underline">
+                  <Award className="w-3.5 h-3.5" />
+                  <span>Meet Our Leadership &amp; Faculty</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Official Notice Board & Academic Calendar */}
+      <section className="py-20 bg-card border-b border-border">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
+            <div>
+              <span className="text-primary text-xs font-serif font-semibold uppercase tracking-[0.2em] block mb-3">
+                सूचना पट्ट • School Notice Board
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-serif text-foreground">
+                Important Announcements &amp; Dates
+              </h2>
+            </div>
+            <Link
+              to="/events"
+              className="text-xs font-serif font-semibold uppercase tracking-widest text-primary hover:text-foreground transition-colors flex items-center gap-2"
+            >
+              <span>View Academic Calendar</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                date: "FROM 01 APRIL",
+                category: "ADMISSIONS 2026–27",
+                title: "Admissions Open for Playgroup to Class 8 (English Medium) & Class 3 to 12 (Hindi Medium)",
+                link: "/admissions"
+              },
+              {
+                date: "SCHOLARSHIP SCHEME",
+                category: "GIRLS EDUCATION INITIATIVE",
+                title: "100% Registration Fee Waiver for All Girls Enrolling in Class 9 & Class 11",
+                link: "/admissions"
+              },
+              {
+                date: "ACADEMIC SUPPORT",
+                category: "FREE COMPUTER & COACHING",
+                title: "Free Daily Coaching for Classes 9–12 & Free Computer Practical Classes for Classes 3–12",
+                link: "/academics"
+              }
+            ].map((item, i) => (
+              <Link
+                key={i}
+                to={item.link}
+                className="group p-6 bg-background border border-border hover:border-primary/50 rounded-xl transition-all flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center gap-3 text-xs font-mono text-muted-foreground mb-3">
+                    <span>{item.date}</span>
+                    <span>•</span>
+                    <span className="text-primary">{item.category}</span>
+                  </div>
+                  <h3 className="text-lg font-serif text-foreground group-hover:text-primary transition-colors leading-snug mb-4">
+                    {item.title}
+                  </h3>
+                </div>
+                <div className="inline-flex items-center gap-2 text-xs text-primary font-serif uppercase tracking-wider pt-2">
+                  <span>{isHi ? "अधिक जानकारी" : "Learn More"}</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
