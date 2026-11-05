@@ -1,26 +1,21 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { GraduationCap, Menu, X, ArrowRight, LogIn, Loader2 } from "lucide-react";
+import { Menu, X, ArrowRight, UserCheck, LogOut, Phone, MessageCircle, Globe } from "lucide-react";
 import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
-import { signIn, auth } from "@/lib/firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { signIn, logOut } from "@/lib/firebase";
+import { useUserProfile } from "@/src/hooks/useUserProfile";
+import { useLanguage } from "@/src/context/LanguageContext";
+import toast from "react-hot-toast";
 
-export function MainLayout() {
+export default function MainLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const { user, loading } = useUserProfile();
+  const { language, setLanguage } = useLanguage();
+  const isHi = language === "hi";
   const location = useLocation();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,154 +25,224 @@ export function MainLayout() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleLogin = async () => {
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  const handleSignIn = async () => {
+    if (isSigningIn) return;
+    setIsSigningIn(true);
     try {
-      setIsLoggingIn(true);
-      if (auth.currentUser) {
-        navigate('/portal');
-        return;
+      const signedInUser = await signIn();
+      if (signedInUser) {
+        navigate("/portal");
       }
-      await signIn();
-      navigate('/portal');
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error("Sign in failed", error);
+      toast.error("Failed to sign in. Please try again.");
     } finally {
-      setIsLoggingIn(false);
+      setIsSigningIn(false);
     }
   };
 
   const navLinks = [
-    { name: "Academics", path: "/academics" },
-    { name: "Faculty", path: "/faculty" },
-    { name: "Library", path: "/library" },
-    { name: "Alumni", path: "/alumni" },
+    { name: isHi ? "शिक्षा (Academics)" : "Academics", path: "/academics" },
+    { name: isHi ? "शिक्षक (Faculty)" : "Faculty", path: "/faculty" },
+    { name: isHi ? "पुस्तकालय (Library)" : "Library", path: "/library" },
+    { name: isHi ? "कार्यक्रम (Events)" : "Events", path: "/events" },
+    { name: isHi ? "पूर्व छात्र (Alumni)" : "Alumni", path: "/alumni" },
+    { name: isHi ? "हमारे बारे में (About)" : "About", path: "/about" },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-background text-foreground antialiased selection:bg-primary/30">
+    <div className="min-h-screen flex flex-col bg-background text-foreground selection:bg-primary selection:text-primary-foreground font-sans">
       {/* Top Utility Belt */}
-      <div className="bg-foreground text-background py-1.5 px-4 sm:px-6 lg:px-8 text-xs font-semibold tracking-wider uppercase flex justify-between items-center w-full z-50 relative">
-        <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
-          <div className="flex gap-6 items-center opacity-80">
-            <span className="hidden sm:inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> Admissions Open 2026-27</span>
-            <span className="hidden sm:inline opacity-50">|</span>
-             <a href="mailto:info@pmpmemorial.edu" className="hover:text-primary transition-colors">info@pmpmemorial.edu</a>
+      <div className="bg-secondary text-muted-foreground text-xs py-2 px-4 sm:px-6 border-b border-border transition-colors">
+        <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <Link
+              to="/admissions"
+              className="inline-flex items-center text-primary font-medium tracking-wider uppercase text-[10px] hover:underline"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-primary mr-2 animate-pulse" />
+              {isHi ? "प्रवेश प्रारम्भ 2026-27 (PG – कक्षा 12)" : "Admissions Open 2026–27 (PG – Class 12)"}
+            </Link>
+            <a
+              href="tel:+919792954343"
+              className="inline-flex items-center gap-1 hover:text-primary transition-colors text-[11px] text-foreground font-medium"
+            >
+              <Phone className="w-3 h-3 text-primary" />
+              <span>+91 97929 54343</span>
+            </a>
+            <a
+              href="tel:+917651995858"
+              className="hidden md:inline-flex items-center gap-1 hover:text-primary transition-colors text-[11px]"
+            >
+              <Phone className="w-3 h-3 text-primary" />
+              <span>+91 76519 95858</span>
+            </a>
           </div>
-          {user ? (
+
+          <div className="flex items-center space-x-3 ml-auto">
+            {/* Bilingual Toggle Button */}
             <button
-              onClick={() => navigate('/portal')}
-              className="hover:text-primary transition-colors flex items-center gap-2 disabled:opacity-50"
+              type="button"
+              onClick={() => setLanguage(language === "en" ? "hi" : "en")}
+              aria-label={language === "en" ? "Switch language to Hindi" : "Switch language to English"}
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 border border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground transition-colors text-[11px] font-medium rounded"
             >
-              Go to Portal
+              <Globe className="w-3 h-3" />
+              <span>{language === "en" ? "हिंदी में देखें" : "English"}</span>
             </button>
-          ) : (
-            <button
-              onClick={handleLogin}
-              disabled={isLoggingIn}
-              className="hover:text-primary transition-colors flex items-center gap-2 disabled:opacity-50"
-            >
-              {isLoggingIn ? 'Signing in...' : 'Access Portal'}
-            </button>
-          )}
+
+            {!loading && (
+              <>
+                {user ? (
+                  <div className="flex items-center space-x-3">
+                    <Link
+                      to="/portal"
+                      className="text-primary hover:underline flex items-center gap-1 font-medium text-[11px]"
+                    >
+                      <UserCheck className="w-3.5 h-3.5" />
+                      <span>{isHi ? "विद्यार्थी पोर्टल" : "Student Portal"}</span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={logOut}
+                      aria-label="Sign out"
+                      className="text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1 text-[11px]"
+                    >
+                      <LogOut className="w-3 h-3" />
+                      <span className="hidden sm:inline">{isHi ? "लॉग आउट" : "Sign Out"}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSignIn}
+                    disabled={isSigningIn}
+                    className="px-3 py-0.5 border border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground transition-colors text-[11px] font-medium rounded disabled:opacity-50"
+                  >
+                    {isSigningIn
+                      ? isHi ? "प्रतीक्षा करें..." : "Signing In..."
+                      : isHi ? "पोर्टल लॉगिन (Vidya AI)" : "Access Portal (Vidya AI)"}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Main Premium Navigation */}
-      <header className={cn(
-        "sticky top-0 z-40 transition-all duration-500 border-b",
-        scrolled ? "bg-background/80 backdrop-blur-xl border-border py-2 support-[backdrop-filter]:bg-background/60" : "bg-background/95 border-transparent py-4"
-      )}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-4 group">
-            <div className="w-12 h-12 bg-primary flex items-center justify-center font-serif text-primary-foreground font-bold text-2xl rotate-3 group-hover:rotate-0 transition-transform duration-500 ease-out">
-              P
+      {/* Main Header */}
+      <header
+        className={`sticky top-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? "bg-background/95 backdrop-blur-md border-b border-border py-3 shadow-lg"
+            : "bg-background py-5 border-b border-border/40"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex justify-between items-center">
+          <Link to="/" className="flex items-center gap-3 sm:gap-4 group">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-none border border-primary flex items-center justify-center bg-card group-hover:bg-primary transition-colors shrink-0">
+              <span className="font-serif font-bold text-lg sm:text-xl text-primary group-hover:text-primary-foreground transition-colors">
+                PMP
+              </span>
             </div>
-            <div className="flex flex-col">
-              <span className="font-serif font-semibold text-2xl leading-none text-foreground tracking-tight">P.M.P. Memorial</span>
-              <span className="text-[9px] font-bold tracking-[0.3em] text-muted-foreground uppercase opacity-80 mt-1">Institutional Excellence</span>
+            <div>
+              <span className="font-serif text-lg sm:text-2xl tracking-tight text-foreground block leading-none">
+                P.M.P. Memorial
+              </span>
+              <span
+                className="text-[10px] tracking-[0.18em] uppercase text-primary block mt-1 font-medium"
+                lang="hi"
+              >
+                पब्लिक स्कूल • शाहपुर, गोंडा (उ.प्र.)
+              </span>
             </div>
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={cn(
-                  "text-sm font-medium transition-all duration-300 relative py-2",
-                  location.pathname === link.path ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {link.name}
-                {location.pathname === link.path && (
-                  <motion.div 
-                    layoutId="nav-indicator"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
-                )}
-              </Link>
-            ))}
-            <div className="flex items-center gap-4 ml-4">
-              <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">About</Link>
-              <Link to="/admissions" className="inline-flex h-9 shrink-0 items-center justify-center border border-transparent bg-clip-padding text-sm whitespace-nowrap outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 gap-1.5 rounded-none bg-foreground text-background hover:bg-primary hover:text-primary-foreground font-semibold px-6 transition-colors duration-300">
-                Apply Now <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-            </div>
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center space-x-7" aria-label="Main Navigation">
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.path;
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`text-sm tracking-wide transition-colors relative py-1 ${
+                    isActive
+                      ? "text-primary font-medium"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {link.name}
+                  {isActive && (
+                    <motion.div
+                      layoutId="nav-indicator"
+                      className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary"
+                    />
+                  )}
+                </Link>
+              );
+            })}
+            <Link
+              to="/admissions"
+              className="px-5 py-2.5 bg-primary text-primary-foreground font-serif font-semibold text-xs uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center gap-2 group"
+            >
+              <span>{isHi ? "प्रवेश फॉर्म" : "Apply Now"}</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </Link>
           </nav>
 
-          {/* Mobile Menu Toggle */}
+          {/* Mobile Menu Trigger */}
           <button
-            className="md:hidden p-2 text-foreground"
+            type="button"
+            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileMenuOpen}
+            className="lg:hidden text-foreground p-2.5 focus:outline-none border border-border rounded-lg"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            <motion.div animate={{ rotate: mobileMenuOpen ? 90 : 0 }}>
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </motion.div>
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
 
-        {/* Mobile Nav */}
+        {/* Mobile Drawer */}
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="md:hidden overflow-hidden bg-background border-b border-border absolute w-full"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="lg:hidden bg-card border-b border-border overflow-hidden"
             >
-              <div className="px-6 py-8 flex flex-col gap-6">
-                {[...navLinks, {name: 'About', path: '/about'}].map((link, i) => (
-                  <motion.div
-                     initial={{ x: -20, opacity: 0 }}
-                     animate={{ x: 0, opacity: 1 }}
-                     transition={{ delay: i * 0.05 }}
-                     key={link.path}
+              <div className="px-6 py-6 flex flex-col space-y-3">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className={`text-base font-serif py-2 border-b border-border/40 ${
+                      location.pathname === link.path ? "text-primary font-bold" : "text-foreground"
+                    }`}
                   >
-                    <Link
-                      to={link.path}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={cn(
-                        "text-2xl font-serif tracking-tight transition-colors",
-                         location.pathname === link.path ? "text-primary italic" : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      {link.name}
-                    </Link>
-                  </motion.div>
-                ))}
-                <motion.div 
-                   initial={{ y: 20, opacity: 0 }}
-                   animate={{ y: 0, opacity: 1 }}
-                   transition={{ delay: 0.3 }}
-                   className="pt-6 border-t border-border flex flex-col gap-4 mt-4"
-                >
-                  <Link to="/admissions" onClick={() => setMobileMenuOpen(false)} className="inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding font-medium whitespace-nowrap outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 h-9 gap-1.5 px-2.5 rounded-none w-full bg-foreground text-background hover:bg-primary">
-                    Apply for Admission
+                    {link.name}
                   </Link>
-                </motion.div>
+                ))}
+                <div className="pt-3 flex flex-col sm:flex-row gap-3">
+                  <Link
+                    to="/admissions"
+                    className="w-full py-3 bg-primary text-primary-foreground text-center font-serif font-semibold text-xs uppercase tracking-widest block"
+                  >
+                    {isHi ? "प्रवेश के लिए आवेदन करें (Apply Now)" : "Apply for Admission"}
+                  </Link>
+                  <a
+                    href="tel:+919792954343"
+                    className="w-full py-3 border border-primary/50 text-primary text-center font-serif font-semibold text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+                  >
+                    <Phone className="w-4 h-4" />
+                    <span>Call: 9792954343</span>
+                  </a>
+                </div>
               </div>
             </motion.div>
           )}
@@ -185,89 +250,96 @@ export function MainLayout() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col">
+      <main id="main-content" className="flex-grow">
         <Outlet />
       </main>
 
-      {/* Premium Footer */}
-      <footer className="bg-card text-foreground pt-24 pb-12 border-t border-border relative overflow-hidden">
-        {/* Subtle Decorative Background Element */}
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-16 mb-20">
-            <div className="md:col-span-5">
-              <Link to="/" className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-primary flex items-center justify-center text-primary-foreground font-serif text-2xl font-bold">
-                  P
-                </div>
-                <div>
-                  <h2 className="font-serif font-bold text-2xl leading-none text-foreground tracking-tight">P.M.P. Memorial</h2>
-                  <span className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase opacity-80 mt-1 block">Public School</span>
-                </div>
-              </Link>
-              <div className="text-muted-foreground text-lg leading-relaxed max-w-sm font-light space-y-4">
+      {/* Floating WhatsApp Quick Inquiry Button */}
+      <a
+        href="https://wa.me/919792954343?text=%E0%A4%A8%E0%A4%AE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%87%20P.M.P.%20Memorial%20Public%20School%2C%20%E0%A4%AE%E0%A5%81%E0%A4%9D%E0%A5%87%20%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%B5%E0%A5%87%E0%A4%B6%20(Admission)%20%E0%A4%95%E0%A5%87%20%E0%A4%AC%E0%A4%BE%E0%A4%B0%E0%A5%87%20%E0%A4%AE%E0%A5%87%E0%A4%82%20%E0%A4%9C%E0%A4%BE%E0%A4%A8%E0%A4%95%E0%A4%BE%E0%A4%B0%E0%A5%80%20%E0%A4%9A%E0%A4%BE%E0%A4%B9%E0%A4%BF%E0%A4%8F%E0%A5%A4"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat with Admissions on WhatsApp"
+        className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 px-4 py-3 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-2xl border border-emerald-400/30 transition-transform hover:scale-105"
+      >
+        <MessageCircle className="w-5 h-5" />
+        <span className="text-xs font-semibold tracking-wide hidden sm:inline">
+          {isHi ? "WhatsApp सहायता" : "WhatsApp Inquiry"}
+        </span>
+      </a>
+
+      {/* Footer */}
+      <footer className="bg-card text-muted-foreground border-t border-border pt-16 pb-12">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12 mb-12">
+          <div className="md:col-span-5">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 border border-primary flex items-center justify-center bg-background">
+                <span className="font-serif font-bold text-sm text-primary">PMP</span>
+              </div>
+              <span className="font-serif text-xl text-foreground tracking-tight">
+                P.M.P. Memorial Public School
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-6 max-w-sm">
+              UP Government (UP Sarkar) recognized institution in Shahpur, Gonda. Empowering students from Playgroup to Class 12 with modern computer education, bilingual AI tutoring, and strong moral values.
+            </p>
+            <p className="text-xs text-primary/90 font-serif tracking-widest uppercase" lang="hi">
+              “शिक्षार्थ आइये, सेवार्थ जाइये • विद्या ददाति विनयम्”
+            </p>
+          </div>
+
+          <div className="md:col-span-3">
+            <h3 className="text-xs font-serif font-semibold uppercase tracking-widest text-foreground mb-5">
+              Navigation
+            </h3>
+            <ul className="space-y-2.5 text-sm">
+              <li><Link to="/about" className="hover:text-primary transition-colors">About Us (हमारे बारे में)</Link></li>
+              <li><Link to="/academics" className="hover:text-primary transition-colors">Academics (पाठ्यक्रम)</Link></li>
+              <li><Link to="/admissions" className="hover:text-primary transition-colors">Admissions (प्रवेश फॉर्म)</Link></li>
+              <li><Link to="/faculty" className="hover:text-primary transition-colors">Leadership &amp; Faculty</Link></li>
+              <li><Link to="/library" className="hover:text-primary transition-colors">Digital Library</Link></li>
+              <li><Link to="/events" className="hover:text-primary transition-colors">School Events</Link></li>
+              <li><Link to="/alumni" className="hover:text-primary transition-colors">Student Achievements</Link></li>
+            </ul>
+          </div>
+
+          <div className="md:col-span-4">
+            <h3 className="text-xs font-serif font-semibold uppercase tracking-widest text-foreground mb-5">
+              Campus &amp; Direct Contact
+            </h3>
+            <address className="not-italic text-sm space-y-2.5 text-muted-foreground">
+              <p className="text-foreground font-medium">P.M.P. Memorial Public School</p>
+              <p>Gram Shahpur, Post Rek Sadiya</p>
+              <p>District Gonda, Uttar Pradesh 271504</p>
+              <div className="pt-3 space-y-1.5">
                 <p>
-                  उत्तर प्रदेश शासन द्वारा मान्यता प्राप्त विद्यालय। निःशुल्क कम्प्यूटर शिक्षा एवं डिजिटल शिक्षा से युक्त।
+                  <span className="text-xs text-muted-foreground">Coordinator (Sunil Kumar Tiwari): </span>
+                  <a href="tel:+919792954343" className="block text-primary hover:underline font-medium">
+                    +91 97929 54343
+                  </a>
                 </p>
                 <p>
-                  UP Government recognized school with free computer and digital education.
+                  <span className="text-xs text-muted-foreground">Manager (Shri Arvind Kumar Tiwari): </span>
+                  <a href="tel:+917651995858" className="block text-primary hover:underline font-medium">
+                    +91 76519 95858
+                  </a>
+                </p>
+                <p>
+                  <span className="text-xs text-muted-foreground">Founder (Shri A.K. Tripathi): </span>
+                  <a href="tel:+916394282229" className="block text-primary hover:underline font-medium">
+                    +91 63942 82229
+                  </a>
                 </p>
               </div>
-            </div>
-            
-            <div className="md:col-span-2 md:col-start-7">
-              <h3 className="font-sans font-bold text-foreground mb-6 uppercase text-xs tracking-[0.2em]">Institution</h3>
-              <ul className="space-y-4">
-                {[
-                  { name: 'About Us', path: '/about' },
-                  { name: 'Leadership', path: '/faculty' },
-                  { name: 'Academics', path: '/academics' },
-                  { name: 'Admissions', path: '/admissions' },
-                ].map((item) => (
-                  <li key={item.name}><Link to={item.path} className="text-muted-foreground hover:text-primary transition-colors text-sm">{item.name}</Link></li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="md:col-span-2">
-              <h3 className="font-sans font-bold text-foreground mb-6 uppercase text-xs tracking-[0.2em]">Resources</h3>
-              <ul className="space-y-4">
-                {[
-                  { name: 'Digital Library', path: '/library' },
-                  { name: 'Student Portal', path: '/portal' },
-                  { name: 'Alumni Network', path: '/alumni' },
-                  { name: 'Events Calendar', path: '/events' },
-                ].map((item) => (
-                  <li key={item.name}><Link to={item.path} className="text-muted-foreground hover:text-primary transition-colors text-sm">{item.name}</Link></li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="md:col-span-2">
-              <h3 className="font-sans font-bold text-foreground mb-6 uppercase text-xs tracking-[0.2em]">Connect</h3>
-              <ul className="space-y-4 text-sm text-muted-foreground font-light">
-                <li>Shahpur, Gonda, Rek Sadiya,<br/>Uttar Pradesh 271504</li>
-                <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-phone"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                  <span>
-                    Contact: Sunil Kumar Tiwari<br/>
-                    <a href="tel:9792954343" className="hover:text-primary transition-colors">9792954343</a>
-                  </span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-phone"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                  <span>
-                    Arvind Kumar Tiwari<br/>
-                    <a href="tel:7651995858" className="hover:text-primary transition-colors">7651995858</a>
-                  </span>
-                </li>
-              </ul>
-            </div>
+            </address>
           </div>
-          
-          <div className="pt-8 border-t border-border/50 text-xs font-medium tracking-wide text-muted-foreground flex flex-col md:flex-row justify-between items-center gap-4 uppercase">
-            <p>&copy; {new Date().getFullYear()} PMP Memorial Public School, Shahpur, Gonda. All rights reserved.</p>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 pt-8 border-t border-border/60 flex flex-col sm:flex-row justify-between items-center text-xs text-muted-foreground gap-4">
+          <p>&copy; {new Date().getFullYear()} P.M.P. Memorial Public School, Shahpur, Gonda. All rights reserved.</p>
+          <div className="flex space-x-6">
+            <Link to="/admissions" className="hover:text-primary transition-colors">Online Admission</Link>
+            <Link to="/portal" className="hover:text-primary transition-colors">Vidya AI Portal</Link>
           </div>
         </div>
       </footer>
