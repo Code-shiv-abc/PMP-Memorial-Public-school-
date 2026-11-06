@@ -1,5 +1,22 @@
 import React, { useState, useRef, useEffect, memo } from 'react';
-import { Send, Bot, User, Sparkles, BookOpen, Languages, GraduationCap, Trash2, Zap, HelpCircle } from 'lucide-react';
+import {
+  Send,
+  Bot,
+  Sparkles,
+  BookOpen,
+  GraduationCap,
+  Trash2,
+  Zap,
+  HelpCircle,
+  Globe,
+  Copy,
+  Check,
+  Volume2,
+  VolumeX,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -25,30 +42,200 @@ const SUBJECTS = [
   'English (अंग्रेजी)',
   'Social Science (सामाजिक विज्ञान)',
   'Sanskrit (संस्कृत)',
-  'Computer Education (कंप्यूटर)',
-  'General Knowledge (सामान्य ज्ञान)'
+  'Computer (कंप्यूटर)',
+  'GK (सामान्य ज्ञान)'
 ];
 
 const LANGUAGE_MODES = [
-  'Bilingual (Hindi + English)',
-  'Simple Hindi (सरल हिंदी)',
-  'Simple English'
+  { id: 'Bilingual (Hindi + English)', labelEn: 'Bilingual (द्विभाषी)', labelHi: 'द्विभाषी (Hindi + Eng)' },
+  { id: 'Simple Hindi (सरल हिंदी)', labelEn: 'Hindi Only (हिंदी)', labelHi: 'केवल सरल हिंदी' },
+  { id: 'Simple English', labelEn: 'English Only', labelHi: 'केवल अंग्रेजी (English)' }
 ];
 
 const STARTER_PROMPTS = [
-  'Explain Photosynthesis in simple Hindi and English',
-  'Solve: 2x + 5 = 15 step by step',
-  'What is Newton’s First Law of Motion? उदाहरण सहित समझाएं',
-  'Write a short application to the Principal for 2 days sick leave'
+  {
+    en: 'All Trigonometry Formulas (Class 10 Math)',
+    hi: 'त्रिकोणमिति (Trigonometry) के सभी मुख्य सूत्र बताएं',
+    query: 'Write all important Class 10 Trigonometry identities and formulas clearly in Hindi and English'
+  },
+  {
+    en: 'Explain Photosynthesis with chemical equation',
+    hi: 'प्रकाश संश्लेषण (Photosynthesis) को समीकरण सहित समझाएं',
+    query: 'Explain Photosynthesis in simple Hindi and English'
+  },
+  {
+    en: 'Solve: 2x + 5 = 15 step by step',
+    hi: 'समीकरण हल करें: 2x + 5 = 15 (चरणबद्ध तरीके से)',
+    query: 'Solve: 2x + 5 = 15 step by step'
+  },
+  {
+    en: 'Newton’s First Law of Motion with examples',
+    hi: 'न्यूटन का गति का प्रथम नियम उदाहरण सहित समझाएं',
+    query: 'What is Newton’s First Law of Motion? उदाहरण सहित समझाएं'
+  }
 ];
 
 const QUICK_FOLLOW_UPS = [
-  'उदाहरण सहित समझाएं (Give an example)',
-  'और सरल हिंदी में बताएं (Explain in simpler Hindi)',
-  'मुझसे 2 अभ्यास प्रश्न पूछें (Ask me 2 practice questions)'
+  {
+    en: 'Give an example',
+    hi: 'उदाहरण दें',
+    queryHi: 'कृपया इसका एक सरल उदाहरण या हल किया हुआ प्रश्न दिखाएं।',
+    queryEn: 'Please show a simple solved example for this.'
+  },
+  {
+    en: 'Explain in simpler Hindi',
+    hi: 'सरल हिंदी में',
+    queryHi: 'इसे और अधिक सरल हिंदी बिंदुओं में समझाएं।',
+    queryEn: 'Explain this in simpler bilingual bullet points.'
+  },
+  {
+    en: '2 Practice Questions',
+    hi: '2 अभ्यास प्रश्न',
+    queryHi: 'इस विषय से बोर्ड परीक्षा के लिए 2 महत्वपूर्ण अभ्यास प्रश्न पूछें।',
+    queryEn: 'Give me 2 board exam practice questions on this topic.'
+  }
 ];
 
-const SESSION_CACHE_KEY = 'vidya_ai_answer_cache_v1';
+const SESSION_CACHE_KEY = 'vidya_ai_answer_cache_v3';
+
+const SUPERSCRIPTS: Record<string, string> = {
+  '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+  '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+  '+': '⁺', '-': '⁻', '=': '⁼', '(': '⁽', ')': '⁾',
+  'n': 'ⁿ', 'x': 'ˣ', 'y': 'ʸ'
+};
+
+const SUBSCRIPTS: Record<string, string> = {
+  '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄',
+  '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉',
+  '+': '₊', '-': '₋', '=': '₌', '(': '₍', ')': '₎'
+};
+
+function toSuper(str: string): string {
+  return str.split('').map((c) => SUPERSCRIPTS[c] || c).join('');
+}
+
+function toSub(str: string): string {
+  return str.split('').map((c) => SUBSCRIPTS[c] || c).join('');
+}
+
+/**
+ * Built-in Zero-Dependency LaTeX & Scientific Formula Formatter
+ * Converts raw $\sin^2\theta$, \frac{a}{b}, $H_2O$, and $$...$$ blocks into clean textbook typography.
+ */
+function cleanLatexSegment(raw: string): string {
+  let s = raw;
+
+  // Annotated arrows: \xrightarrow{\text{Sunlight}} -> ──[Sunlight]──►
+  s = s.replace(/\\xrightarrow\{\\text\{([^}]*)\}\}/g, ' ──[$1]──► ');
+  s = s.replace(/\\xrightarrow\{([^}]*)\}/g, ' ──[$1]──► ');
+
+  // Remove \text{...}, \mathrm{...}, \mathbf{...}
+  s = s.replace(/\\(?:text|mathrm|mathbf|bf)\{([^}]*)\}/g, '$1');
+
+  // Fractions: \frac{a}{b} -> (a)/(b) or a/b
+  s = s.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, (_, num, den) => {
+    const n = num.trim();
+    const d = den.trim();
+    const nWrap = n.length > 2 && /[+\-]/.test(n) ? `(${n})` : n;
+    const dWrap = d.length > 2 && /[+\-]/.test(d) ? `(${d})` : d;
+    return `${nWrap} / ${dWrap}`;
+  });
+
+  // Square roots: \sqrt{x} -> √(x)
+  s = s.replace(/\\sqrt\{([^{}]+)\}/g, (_, inner) => (inner.length === 1 ? `√${inner}` : `√(${inner})`));
+
+  // Standard trig & math functions (fixes "\ cosec" with space too)
+  s = s.replace(/\\\s*(sin|cos|tan|cot|sec|cosec|csc|log|ln|lim|max|min)\b/g, '$1');
+
+  // Greek letters & math symbols
+  const symbolMap: Array<[RegExp, string]> = [
+    [/\\theta\b/g, 'θ'],
+    [/\\alpha\b/g, 'α'],
+    [/\\beta\b/g, 'β'],
+    [/\\gamma\b/g, 'γ'],
+    [/\\delta\b/g, 'δ'],
+    [/\\Delta\b/g, 'Δ'],
+    [/\\pi\b/g, 'π'],
+    [/\\lambda\b/g, 'λ'],
+    [/\\mu\b/g, 'μ'],
+    [/\\omega\b/g, 'ω'],
+    [/\\Omega\b/g, 'Ω'],
+    [/\\sigma\b/g, 'σ'],
+    [/\\phi\b/g, 'φ'],
+    [/\\infty\b/g, '∞'],
+    [/\\times\b/g, '×'],
+    [/\\div\b/g, '÷'],
+    [/\\pm\b/g, '±'],
+    [/\\cdot\b/g, '·'],
+    [/\\leq?\b/g, '≤'],
+    [/\\geq?\b/g, '≥'],
+    [/\\neq?\b/g, '≠'],
+    [/\\approx\b/g, '≈'],
+    [/\\equiv\b/g, '≡'],
+    [/\\rightarrow\b|\\to\b/g, ' → '],
+    [/\\leftarrow\b/g, ' ← '],
+    [/\\Rightarrow\b/g, ' ⇒ '],
+    [/\\Leftrightarrow\b/g, ' ⇔ '],
+    [/\\uparrow\b/g, '↑'],
+    [/\\downarrow\b/g, '↓'],
+    [/\\degree\b|\\circ\b/g, '°'],
+    [/\\triangle\b/g, '△'],
+    [/\\angle\b/g, '∠'],
+    [/\\perp\b/g, '⊥'],
+    [/\\parallel\b/g, '∥'],
+    [/\\therefore\b/g, '∴'],
+    [/\\because\b/g, '∵'],
+    [/\\left\(/g, '('],
+    [/\\right\)/g, ')'],
+    [/\\left\[/g, '['],
+    [/\\right\]/g, ']'],
+    [/\\,/g, ' '],
+    [/\\;/g, ' '],
+    [/\\quad\b/g, '  ']
+  ];
+
+  for (const [regex, replacement] of symbolMap) {
+    s = s.replace(regex, replacement);
+  }
+
+  // Superscripts: ^{2x} or ^2
+  s = s.replace(/\^\{([0-9+\-=()nxy]+)\}/g, (_, exp) => toSuper(exp));
+  s = s.replace(/\^([0-9+\-nxy])/g, (_, exp) => toSuper(exp));
+
+  // Subscripts: _{12} or _2 (e.g., H_2O -> H₂O, CO_2 -> CO₂)
+  s = s.replace(/_\{([0-9+\-=()]+)\}/g, (_, sub) => toSub(sub));
+  s = s.replace(/_([0-9])/g, (_, sub) => toSub(sub));
+
+  // Clean stray braces
+  s = s.replace(/\{([^{}]+)\}/g, '$1');
+
+  return s.replace(/\s{2,}/g, ' ').trim();
+}
+
+function formatMathAndScience(markdown: string): string {
+  if (!markdown) return '';
+  let out = markdown;
+
+  // 1. Convert Display Equation Blocks $$ ... $$ into highlighted code blocks (`math-block`)
+  out = out.replace(/\$\$([\s\S]*?)\$\$/g, (_, eq) => {
+    const cleaned = cleanLatexSegment(eq);
+    return `\n\n\`\`\`math-formula\n${cleaned}\n\`\`\`\n\n`;
+  });
+
+  // 2. Convert Inline Math $ ... $ into bold highlighted inline formula
+  out = out.replace(/\$([^$\n]+)\$/g, (_, eq) => {
+    const cleaned = cleanLatexSegment(eq);
+    return `\`MATH:${cleaned}\``;
+  });
+
+  // 3. Catch any remaining bare LaTeX commands outside $...$ (e.g. \theta, \sin^2)
+  if (/\\(theta|sin|cos|tan|cot|sec|cosec|frac|sqrt|times|div|rightarrow|alpha|beta|pi)/.test(out)) {
+    out = cleanLatexSegment(out);
+  }
+
+  return out;
+}
 
 function getClientCache(key: string): string | null {
   try {
@@ -75,46 +262,90 @@ function setClientCache(key: string, reply: string) {
 }
 
 const MemoizedMarkdown = memo(({ text }: { text: string }) => {
+  const formattedText = formatMathAndScience(text);
+
   return (
     <ReactMarkdown
       components={{
-        p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
-        ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>,
-        ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>,
-        li: ({ children }) => <li className="text-neutral-200">{children}</li>,
-        h1: ({ children }) => <h1 className="text-lg font-serif font-bold text-amber-500 mt-4 mb-2">{children}</h1>,
-        h2: ({ children }) => <h2 className="text-base font-serif font-bold text-amber-400 mt-3 mb-2">{children}</h2>,
-        h3: ({ children }) => <h3 className="text-sm font-serif font-bold text-amber-300 mt-2 mb-1">{children}</h3>,
+        p: ({ children }) => (
+          <p className="mb-3 last:mb-0 text-[15px] sm:text-base leading-[1.8] text-neutral-100">
+            {children}
+          </p>
+        ),
+        ul: ({ children }) => (
+          <ul className="list-disc pl-5 mb-3.5 space-y-2 text-[15px] sm:text-base leading-[1.75] text-neutral-100">
+            {children}
+          </ul>
+        ),
+        ol: ({ children }) => (
+          <ol className="list-decimal pl-5 mb-3.5 space-y-2 text-[15px] sm:text-base leading-[1.75] text-neutral-100">
+            {children}
+          </ol>
+        ),
+        li: ({ children }) => <li className="text-neutral-100 pl-0.5">{children}</li>,
+        strong: ({ children }) => <strong className="font-semibold text-amber-300">{children}</strong>,
+        h1: ({ children }) => (
+          <h1 className="text-base sm:text-lg font-serif font-bold text-amber-400 mt-4 mb-2 pb-1 border-b border-neutral-800">
+            {children}
+          </h1>
+        ),
+        h2: ({ children }) => (
+          <h2 className="text-[15px] sm:text-base font-serif font-bold text-amber-400 mt-3.5 mb-1.5">
+            {children}
+          </h2>
+        ),
+        h3: ({ children }) => (
+          <h3 className="text-sm sm:text-[15px] font-serif font-bold text-amber-300 mt-3 mb-1">
+            {children}
+          </h3>
+        ),
         code: ({ className, children, ...props }: React.ComponentPropsWithoutRef<'code'>) => {
+          const rawContent = String(children).replace(/\n$/, '');
+
+          // Render block-level formulas in a golden textbook formula card
+          if (className?.includes('language-math-formula')) {
+            return (
+              <div className="my-3 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 font-serif text-base sm:text-lg font-semibold tracking-wide text-center overflow-x-auto shadow-sm">
+                {rawContent}
+              </div>
+            );
+          }
+
+          // Render inline math formulas cleanly in warm gold pill
+          if (rawContent.startsWith('MATH:')) {
+            const formula = rawContent.slice(5);
+            return (
+              <span className="inline-block bg-amber-500/15 text-amber-200 border border-amber-500/30 px-2 py-0.5 mx-0.5 rounded-md font-serif font-semibold text-[15px] sm:text-base tracking-wide">
+                {formula}
+              </span>
+            );
+          }
+
           const match = /language-(\w+)/.exec(className || '');
-          const isInline = !match && !String(children).includes('\n');
+          const isInline = !match && !rawContent.includes('\n');
           return isInline ? (
-            <code className="bg-neutral-950 text-amber-300 px-1.5 py-0.5 rounded text-xs font-mono border border-neutral-800" {...props}>
+            <code
+              className="bg-neutral-950 text-amber-300 px-1.5 py-0.5 rounded text-sm font-mono border border-neutral-800"
+              {...props}
+            >
               {children}
             </code>
           ) : (
-            <pre className="bg-neutral-950 p-3 rounded-xl overflow-x-auto border border-neutral-800 my-3">
-              <code className="text-xs font-mono text-neutral-200" {...props}>
+            <pre className="bg-neutral-950 p-3.5 rounded-xl overflow-x-auto border border-neutral-800 my-3">
+              <code className="text-xs sm:text-sm font-mono text-neutral-100 leading-relaxed" {...props}>
                 {children}
               </code>
             </pre>
           );
         },
         blockquote: ({ children }) => (
-          <blockquote className="border-l-2 border-amber-500 pl-3 italic text-neutral-400 my-2">
+          <blockquote className="border-l-2 border-amber-500 bg-amber-500/5 px-3.5 py-2 rounded-r-lg italic text-neutral-200 my-3">
             {children}
           </blockquote>
         ),
-        table: ({ children }) => (
-          <div className="overflow-x-auto my-3">
-            <table className="min-w-full border-collapse border border-neutral-800 text-xs">{children}</table>
-          </div>
-        ),
-        th: ({ children }) => <th className="border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-left font-serif font-semibold text-amber-400">{children}</th>,
-        td: ({ children }) => <td className="border border-neutral-800 px-3 py-1.5 text-neutral-300">{children}</td>,
       }}
     >
-      {text}
+      {formattedText}
     </ReactMarkdown>
   );
 });
@@ -122,17 +353,22 @@ const MemoizedMarkdown = memo(({ text }: { text: string }) => {
 MemoizedMarkdown.displayName = 'MemoizedMarkdown';
 
 export default function StudyAssistant() {
-  const { language, t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const isHi = language === 'hi';
 
   const [selectedClass, setSelectedClass] = useState(SCHOOL_CLASSES[3]);
-  const [selectedSubject, setSelectedSubject] = useState(SUBJECTS[1]);
-  const [languageMode, setLanguageMode] = useState(LANGUAGE_MODES[0]);
+  const [selectedSubject, setSelectedSubject] = useState(SUBJECTS[0]);
+  const [languageMode, setLanguageMode] = useState(LANGUAGE_MODES[0].id);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [cooldown, setCooldown] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -142,13 +378,65 @@ export default function StudyAssistant() {
     scrollToBottom();
   }, [messages, isLoading]);
 
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 110)}px`;
+  }, [input]);
+
+  const handleToggleLanguage = () => {
+    const nextLang = isHi ? 'en' : 'hi';
+    setLanguage(nextLang);
+    if (nextLang === 'hi') {
+      setLanguageMode('Simple Hindi (सरल हिंदी)');
+    } else {
+      setLanguageMode('Bilingual (Hindi + English)');
+    }
+  };
+
   const handleClearChat = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setSpeakingId(null);
     setMessages([]);
+  };
+
+  const handleCopy = async (id: string, text: string) => {
+    try {
+      const clean = formatMathAndScience(text).replace(/`MATH:([^`]+)`/g, '$1').replace(/```math-formula\n([\s\S]*?)\n```/g, '$1');
+      await navigator.clipboard.writeText(clean);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      // Ignore clipboard fallback
+    }
+  };
+
+  const handleSpeak = (id: string, text: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    if (speakingId === id) {
+      window.speechSynthesis.cancel();
+      setSpeakingId(null);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const cleanText = formatMathAndScience(text).replace(/`MATH:([^`]+)`/g, '$1').replace(/[#*`_~>-]/g, ' ');
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = /[\u0900-\u097F]/.test(cleanText) ? 'hi-IN' : 'en-IN';
+    utterance.rate = 0.95;
+    utterance.onend = () => setSpeakingId(null);
+    utterance.onerror = () => setSpeakingId(null);
+    setSpeakingId(id);
+    window.speechSynthesis.speak(utterance);
   };
 
   const handleSend = async (promptText?: string) => {
     const query = (promptText ?? input).trim();
     if (!query || isLoading || cooldown) return;
+
+    setMobileFiltersOpen(false);
 
     const userMsg: Message = {
       id: Date.now().toString(),
@@ -156,16 +444,17 @@ export default function StudyAssistant() {
       text: query
     };
 
-    // Capture last 4 messages BEFORE appending the new message for compact follow-up context
     const recentHistory = messages.slice(-4).map((m) => ({
       role: m.role,
       text: m.text
     }));
 
     setMessages((prev) => [...prev, userMsg]);
-    if (!promptText) setInput('');
+    if (!promptText) {
+      setInput('');
+      if (textareaRef.current) textareaRef.current.style.height = 'auto';
+    }
 
-    // Check Browser Session Cache first (0 API Calls / 0 RPM if already asked in this session)
     const lastContext = recentHistory.length > 0 ? recentHistory[recentHistory.length - 1].text.slice(0, 60) : '';
     const clientCacheKey = `${selectedClass}|${selectedSubject}|${languageMode}|${lastContext}|${query.toLowerCase()}`;
     const cachedReply = getClientCache(clientCacheKey);
@@ -185,7 +474,7 @@ export default function StudyAssistant() {
 
     setIsLoading(true);
     setCooldown(true);
-    setTimeout(() => setCooldown(false), 2500);
+    setTimeout(() => setCooldown(false), 2000);
 
     try {
       const response = await fetch('/api/study-assistant', {
@@ -222,7 +511,10 @@ export default function StudyAssistant() {
       setMessages((prev) => [...prev, aiMsg]);
     } catch (error: unknown) {
       console.error('Gemini API Error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'The AI is unavailable right now. Please contact 9792954343.';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'The AI is unavailable right now. Please contact 9792954343.';
       setMessages((prev) => [
         ...prev,
         {
@@ -236,240 +528,55 @@ export default function StudyAssistant() {
     }
   };
 
+  const shortClassLabel = selectedClass.split('(')[0].trim();
+  const shortSubjectLabel = selectedSubject.split('(')[0].trim();
+
   return (
-    <div className="max-w-5xl mx-auto flex flex-col h-[calc(100vh-7rem)] bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-2xl">
-      {/* Header */}
-      <div className="p-4 sm:px-6 bg-neutral-950 border-b border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-            <Sparkles className="w-5 h-5" />
+    /* Full-bleed edge-to-edge on mobile (-mx-4 -my-4), framed card on tablet/laptop */
+    <div className="-mx-4 -my-4 sm:mx-auto sm:my-0 w-[calc(100%+2rem)] sm:w-full max-w-5xl flex flex-col h-[calc(100dvh-4rem)] sm:h-[calc(100vh-5.5rem)] bg-[#111318] sm:border border-neutral-800/90 sm:rounded-2xl overflow-hidden shadow-2xl">
+      {/* 1. Single-Row Mobile & Desktop Top Header */}
+      <div className="px-3 sm:px-5 py-2 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-500/15 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+            <Sparkles className="w-4 h-4" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-serif font-bold text-white tracking-tight">
-                {isHi ? 'विद्या AI (Vidya AI - अध्ययन सहायिका)' : 'Vidya AI Study Assistant'}
-              </h1>
-              <span className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-amber-500/20 text-amber-400 rounded-full border border-amber-500/30">
-                PMP Scholar
-              </span>
-            </div>
-            <p className="text-xs text-neutral-300">
-              {isHi
-                ? 'पी. एम. पी. मेमोरियल पब्लिक स्कूल • NCERT एवं UP बोर्ड द्विभाषी ट्यूटर'
-                : 'P.M.P. Memorial Public School • Bilingual NCERT & UP Board AI Tutor'}
-            </p>
-          </div>
-        </div>
+          <h1 className="text-sm sm:text-base font-serif font-bold text-white truncate">
+            {isHi ? 'विद्या AI' : 'Vidya AI'}
+          </h1>
 
-        <div className="flex items-center gap-2">
-          {messages.length > 0 && (
-            <button
-              type="button"
-              onClick={handleClearChat}
-              aria-label="Clear chat history"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-700 transition-colors"
-            >
-              <Trash2 className="w-3.5 h-3.5 text-amber-400" />
-              <span>{t('clearChat')}</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Context Selectors */}
-      <div className="p-3 sm:px-6 bg-neutral-900/90 border-b border-neutral-800 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-        <div className="flex items-center gap-2 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5">
-          <GraduationCap className="w-4 h-4 text-amber-400 shrink-0" />
-          <label htmlFor="vidya-class-select" className="text-neutral-300 shrink-0">
-            {isHi ? 'कक्षा:' : 'Class:'}
-          </label>
-          <select
-            id="vidya-class-select"
-            value={selectedClass}
-            onChange={(e) => setSelectedClass(e.target.value)}
-            className="bg-transparent text-neutral-100 font-medium focus:outline-none w-full truncate"
-          >
-            {SCHOOL_CLASSES.map((c) => (
-              <option key={c} value={c} className="bg-neutral-900 text-white">{c}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex items-center gap-2 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5">
-          <BookOpen className="w-4 h-4 text-amber-400 shrink-0" />
-          <label htmlFor="vidya-subject-select" className="text-neutral-300 shrink-0">
-            {isHi ? 'विषय:' : 'Subject:'}
-          </label>
-          <select
-            id="vidya-subject-select"
-            value={selectedSubject}
-            onChange={(e) => setSelectedSubject(e.target.value)}
-            className="bg-transparent text-neutral-100 font-medium focus:outline-none w-full truncate"
-          >
-            {SUBJECTS.map((s) => (
-              <option key={s} value={s} className="bg-neutral-900 text-white">{s}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex items-center gap-2 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5">
-          <Languages className="w-4 h-4 text-amber-400 shrink-0" />
-          <label htmlFor="vidya-lang-select" className="text-neutral-300 shrink-0">
-            {isHi ? 'माध्यम:' : 'Medium:'}
-          </label>
-          <select
-            id="vidya-lang-select"
-            value={languageMode}
-            onChange={(e) => setLanguageMode(e.target.value)}
-            className="bg-transparent text-neutral-100 font-medium focus:outline-none w-full truncate"
-          >
-            {LANGUAGE_MODES.map((l) => (
-              <option key={l} value={l} className="bg-neutral-900 text-white">{l}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Chat Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
-        {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto py-6">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-4">
-              <Bot className="w-8 h-8" />
-            </div>
-            <h2 className="text-xl font-serif font-bold text-white mb-1" lang="hi">
-              नमस्ते! मैं विद्या (Vidya AI) हूँ
-            </h2>
-            <p className="text-sm text-neutral-300 mb-6">
-              Your personal study assistant for P.M.P. Memorial Public School. Ask any question from your {selectedSubject} syllabus in Hindi or English!
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full text-left">
-              {STARTER_PROMPTS.map((prompt) => (
-                <button
-                  key={prompt}
-                  type="button"
-                  onClick={() => handleSend(prompt)}
-                  className="p-3 rounded-xl bg-neutral-950 hover:bg-neutral-800/80 border border-neutral-800 hover:border-amber-500/40 text-xs text-neutral-200 transition-all flex items-start gap-2 group"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
-                  <span>{prompt}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          messages.map((msg, idx) => {
-            const isLastAssistant = msg.role === 'assistant' && idx === messages.length - 1 && !isLoading;
-            return (
-              <div key={msg.id} className="space-y-2">
-                <div className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  {msg.role === 'assistant' && (
-                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 mt-1">
-                      <Bot className="w-4 h-4" />
-                    </div>
-                  )}
-                  <div
-                    className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                      msg.role === 'user'
-                        ? 'bg-amber-500 text-neutral-950 font-medium rounded-br-none'
-                        : 'bg-neutral-800/90 text-neutral-100 border border-neutral-700/70 rounded-bl-none'
-                    }`}
-                  >
-                    {msg.role === 'assistant' && msg.cached && (
-                      <div className="inline-flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full mb-2">
-                        <Zap className="w-3 h-3" />
-                        <span>Instant Cache</span>
-                      </div>
-                    )}
-                    {msg.role === 'user' ? (
-                      <div className="whitespace-pre-wrap">{msg.text}</div>
-                    ) : (
-                      <div className="markdown-body">
-                        <MemoizedMarkdown text={msg.text} />
-                      </div>
-                    )}
-                  </div>
-                  {msg.role === 'user' && (
-                    <div className="w-8 h-8 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-300 shrink-0 mt-1">
-                      <User className="w-4 h-4" />
-                    </div>
-                  )}
-                </div>
-
-                {/* One-Tap Follow-Up Chips below the latest AI answer */}
-                {isLastAssistant && (
-                  <div className="pl-11 flex flex-wrap gap-2 pt-1">
-                    {QUICK_FOLLOW_UPS.map((chip) => (
-                      <button
-                        key={chip}
-                        type="button"
-                        onClick={() => handleSend(chip)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] bg-neutral-950 hover:bg-amber-500/15 text-neutral-300 hover:text-amber-300 border border-neutral-800 hover:border-amber-500/40 transition-colors"
-                      >
-                        <HelpCircle className="w-3 h-3 text-amber-400" />
-                        <span>{chip}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })
-        )}
-
-        {isLoading && (
-          <div className="flex gap-3 justify-start">
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-              <Bot className="w-4 h-4 animate-pulse" />
-            </div>
-            <div className="bg-neutral-800/80 border border-neutral-700/60 rounded-2xl rounded-bl-none px-4 py-3 flex items-center gap-2 text-xs text-neutral-300">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-bounce" />
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-bounce [animation-delay:0.2s]" />
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-bounce [animation-delay:0.4s]" />
-              <span className="ml-1">Vidya AI उत्तर तैयार कर रही है...</span>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input Form Bar */}
-      <div className="p-3 sm:px-6 bg-neutral-950 border-t border-neutral-800 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSend();
-          }}
-          className="flex items-center gap-2 max-w-5xl mx-auto"
-        >
-          <textarea
-            aria-label="Ask a study question in Hindi or English"
-            rows={1}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder={isHi ? 'अपना प्रश्न हिंदी या अंग्रेजी में लिखें...' : 'Ask any question in Hindi or English...'}
-            className="flex-1 bg-neutral-900 border border-neutral-800 focus:border-amber-500/50 rounded-xl px-4 py-2.5 text-sm text-white placeholder-neutral-400 focus:outline-none resize-none"
-          />
+          {/* Mobile Compact Context Pill (Opens drawer only when tapped) */}
           <button
-            type="submit"
-            aria-label="Send question"
-            disabled={!input.trim() || isLoading || cooldown}
-            className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:hover:bg-amber-500 text-neutral-950 font-serif font-semibold text-sm transition-colors flex items-center gap-1.5 shrink-0"
+            type="button"
+            onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+            className="md:hidden inline-flex items-center gap-1 px-2 py-1 rounded-md bg-neutral-900 border border-neutral-700 text-[11px] text-amber-300 font-medium truncate max-w-[155px]"
           >
-            <Send className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('send')}</span>
+            <SlidersHorizontal className="w-3 h-3 shrink-0" />
+            <span className="truncate">{shortClassLabel} • {shortSubjectLabel}</span>
+            {mobileFiltersOpen ? <ChevronUp className="w-3 h-3 shrink-0" /> : <ChevronDown className="w-3 h-3 shrink-0" />}
           </button>
-        </form>
-        <p className="text-[11px] text-neutral-400 text-center mt-2">
-          Vidya AI remembers your last 4 messages for follow-up questions • Smart Caching Enabled
-        </p>
-      </div>
-    </div>
-  );
-}
+        </div>
+
+        {/* Desktop Inline Selectors (Hidden on Mobile to save vertical space) */}
+        <div className="hidden md:flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-neutral-900 border border-neutral-700/80 rounded-lg px-2.5 py-1 text-xs">
+            <GraduationCap className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <select
+              aria-label="Select Class"
+              value={selectedClass}
+              onChange={(e) => setSelectedClass(e.target.value)}
+              className="bg-transparent text-neutral-100 font-medium focus:outline-none max-w-[140px] truncate cursor-pointer"
+            >
+              {SCHOOL_CLASSES.map((c) => (
+                <option key={c} value={c} className="bg-neutral-900 text-white">{c}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1 bg-neutral-900 border border-neutral-700/80 rounded-lg px-2.5 py-1 text-xs">
+            <BookOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <select
+              aria-label="Select Subject"
+              value={selectedSubject}
+              onChange={(e) => setSelectedSubject(e.target.value)}
+              className="bg-transparent text-neutral-100 font-medium focus:outline-none max-w-[135px] truncate cursor-pointer"
+           
