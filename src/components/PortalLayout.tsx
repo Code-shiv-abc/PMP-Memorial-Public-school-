@@ -1,216 +1,332 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  BookOpen, 
-  Calendar as CalendarIcon, 
-  FileText, 
-  Settings, 
+import {
+  LayoutDashboard,
+  BookOpen,
+  Calendar,
+  FileText,
+  Settings,
   LogOut,
-  Bell,
-  Search,
-  User,
   Menu,
   X,
-  Loader2,
-  Bot,
-  ArrowLeft
+  Sparkles,
+  Globe,
+  Home,
+  Phone
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuGroup } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { auth, logOut } from "@/lib/firebase";
-import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { logOut } from "@/lib/firebase";
+import { useUserProfile } from "@/src/hooks/useUserProfile";
 import { useLanguage } from "@/src/context/LanguageContext";
 
 export function PortalLayout() {
-  const { t } = useLanguage();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { profile, loading } = useUserProfile();
+  const { language, setLanguage, t } = useLanguage();
+  const isHi = language === "hi";
   const location = useLocation();
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-      if (!currentUser) {
-        navigate('/');
-      }
-    });
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
-    return () => unsubscribe();
-  }, [navigate]);
-
-  const handleLogOut = async () => {
+  const handleLogout = async () => {
     await logOut();
-    navigate('/');
+    navigate("/");
   };
 
-  const sidebarItems = [
-    { icon: LayoutDashboard, label: t('dashboard'), path: "/portal" },
-    { icon: BookOpen, label: t('myCourses'), path: "/portal/courses" },
-    { icon: FileText, label: t('assignments'), path: "/portal/assignments" },
-    { icon: CalendarIcon, label: t('schedule'), path: "/portal/schedule" },
-    { icon: Bot, label: t('studyAssistant'), path: "/portal/study-assistant" },
-    { icon: Settings, label: t('settings'), path: "/portal/settings" },
+  const navItems = [
+    {
+      name: isHi ? "डैशबोर्ड (Dashboard)" : t("dashboard"),
+      path: "/portal",
+      icon: LayoutDashboard,
+    },
+    {
+      name: isHi ? "विद्या AI ट्यूटर (Vidya AI)" : "Vidya AI Tutor",
+      path: "/portal/study-assistant",
+      icon: Sparkles,
+      badge: "AI",
+    },
+    {
+      name: isHi ? "विषय एवं पाठ्यक्रम (Subjects)" : t("courses"),
+      path: "/portal/courses",
+      icon: BookOpen,
+    },
+    {
+      name: isHi ? "गृहकार्य (Assignments)" : t("assignments"),
+      path: "/portal/assignments",
+      icon: FileText,
+    },
+    {
+      name: isHi ? "समय सारणी (Timetable)" : t("schedule"),
+      path: "/portal/schedule",
+      icon: Calendar,
+    },
+    {
+      name: isHi ? "सेटिंग्स (Settings)" : t("settings"),
+      path: "/portal/settings",
+      icon: Settings,
+    },
   ];
 
-  const SidebarContent = () => (
-    <>
-      <div className="h-20 flex items-center px-6 border-b border-border shrink-0">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded bg-primary text-white flex justify-center items-center font-serif font-bold">
-            P
-          </div>
-          <span className="font-serif font-bold text-lg text-primary uppercase tracking-wide">PMP Portal</span>
-        </Link>
-      </div>
-      
-      <div className="flex-1 py-6 px-4 overflow-y-auto">
-        <Link to="/" className="flex items-center gap-2 text-[#D4AF37] text-sm mb-6 hover:text-white transition-colors">
-          <ArrowLeft className="w-4 h-4" /> PMP Memorial Public School
-        </Link>
-        <nav className="space-y-1">
-          {sidebarItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                location.pathname === item.path 
-                  ? "bg-primary/10 text-primary" 
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-      
-      <div className="p-4 border-t border-border shrink-0">
-        <Button onClick={handleLogOut} variant="ghost" className="w-full justify-start gap-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10">
-          <LogOut className="w-5 h-5" />
-          Logout
-        </Button>
-      </div>
-    </>
-  );
-
-  if (loading) {
-    return <div className="h-screen w-full flex items-center justify-center bg-background"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
-  }
-
-  if (!user) return null;
+  const displayName = profile?.name || (isHi ? "विद्यार्थी (Scholar)" : "PMP Scholar");
+  const displayRole = profile?.role
+    ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
+    : "Student";
+  const userInitial = displayName.charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-background flex overflow-hidden">
-      {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-card border-r border-border fixed h-full z-20">
-        <SidebarContent />
+    <div className="min-h-screen bg-[#0F1115] text-foreground flex flex-col lg:flex-row font-sans">
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-[#14171E] border-r border-border shrink-0 select-none">
+        <div className="h-16 px-6 flex items-center justify-between border-b border-border">
+          <Link to="/" className="flex items-center gap-3 group">
+            {/* High-Contrast Black-on-Gold Badge (Fixes 2.10:1 WCAG failure) */}
+            <div className="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-serif font-black text-base shadow-md">
+              PMP
+            </div>
+            <div>
+              <span className="font-serif font-bold text-sm text-foreground block leading-none">
+                P.M.P. Memorial
+              </span>
+              <span className="text-[10px] text-primary uppercase tracking-widest block mt-1">
+                {isHi ? "विद्यार्थी पोर्टल" : "Scholar Portal"}
+              </span>
+            </div>
+          </Link>
+        </div>
+
+        {/* Navigation Links */}
+        <nav className="flex-1 px-3 py-5 space-y-1.5 overflow-y-auto" aria-label="Portal Navigation">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                  isActive
+                    ? "bg-primary text-primary-foreground font-semibold shadow-md"
+                    : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{item.name}</span>
+                </div>
+                {item.badge && (
+                  <span
+                    className={`px-1.5 py-0.5 text-[10px] font-bold rounded-full ${
+                      isActive
+                        ? "bg-black/20 text-primary-foreground"
+                        : "bg-primary/20 text-primary border border-primary/30"
+                    }`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* User Footer in Sidebar */}
+        <div className="p-4 border-t border-border bg-[#111318] space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-primary/15 border border-primary/40 text-primary flex items-center justify-center font-serif font-bold text-sm shrink-0">
+              {userInitial}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-foreground truncate">
+                {loading ? "..." : displayName}
+              </p>
+              <p className="text-[11px] text-primary truncate">{displayRole} • Shahpur, Gonda</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <Link
+              to="/"
+              className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-white/5 text-xs transition-colors"
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>{isHi ? "मुख्य पृष्ठ" : "Website"}</span>
+            </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-red-900/40 text-red-400 hover:bg-red-950/40 text-xs transition-colors cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>{isHi ? "लॉग आउट" : t("signOut")}</span>
+            </button>
+          </div>
+        </div>
       </aside>
 
-      {/* Sidebar - Mobile (Drawer) */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-            <motion.aside
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-              className="fixed left-0 top-0 bottom-0 w-[280px] bg-card border-r border-border z-50 flex flex-col md:hidden shadow-2xl"
+      {/* Main Content Column */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Portal Header */}
+        <header className="h-14 sm:h-16 bg-[#14171E]/95 backdrop-blur-md border-b border-border px-3 sm:px-6 flex items-center justify-between sticky top-0 z-40">
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open portal navigation menu"
+              className="lg:hidden p-2 rounded-lg border border-border text-foreground hover:bg-white/5"
             >
-              <SidebarContent />
-              <button 
-                className="absolute top-6 right-4 p-2 text-muted-foreground hover:text-foreground"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
+              <Menu className="w-5 h-5" />
+            </button>
 
-      {/* Main Content Area */}
-      <div className="flex-1 md:ml-64 flex flex-col min-h-screen relative max-w-full">
-        {/* Top Header */}
-        <header className="h-20 bg-card border-b border-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
-          <div className="flex items-center gap-3 md:hidden">
-            <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(true)} className="text-foreground">
-              <Menu className="w-6 h-6" />
-            </Button>
+            <Link to="/portal" className="flex items-center gap-2 lg:hidden">
+              <div className="w-7 h-7 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-serif font-bold text-xs">
+                PMP
+              </div>
+              <span className="font-serif font-bold text-sm text-foreground">
+                {isHi ? "विद्यार्थी पोर्टल" : "Student Portal"}
+              </span>
+            </Link>
+
+            <div className="hidden lg:flex items-center gap-2 text-xs text-muted-foreground">
+              <span>P.M.P. Memorial Public School, Shahpur, Gonda</span>
+              <span>•</span>
+              <span className="text-primary font-medium" lang="hi">
+                शिक्षार्थ आइये, सेवार्थ जाइये
+              </span>
+            </div>
           </div>
-          
-          <div className="hidden md:flex items-center relative w-96">
-            <Search className="w-4 h-4 absolute left-3 text-muted-foreground" />
-            <Input placeholder="Search portal..." className="pl-9 bg-background border-border" />
-          </div>
-          
-          <div className="flex items-center gap-3 sm:gap-4 ml-auto">
-            <Button variant="ghost" size="icon" className="relative text-muted-foreground hidden sm:flex">
-              <Search className="w-5 h-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="relative text-muted-foreground">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary border-2 border-card"></span>
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost" }), "flex items-center gap-2 pl-1 pr-1 border border-border rounded-full h-10 sm:w-auto sm:px-3 hover:bg-secondary")}>
-                  <Avatar className="w-8 h-8">
-                    {user?.photoURL ? (
-                      <AvatarImage src={user.photoURL} alt={user.displayName || "User"} />
-                    ) : null}
-                    <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold font-serif">
-                      {user?.displayName ? user.displayName.substring(0,2).toUpperCase() : 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden sm:inline-block text-sm font-medium text-foreground pr-1">{user?.displayName || "Student"}</span>
-                </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 mt-2">
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel className="font-serif font-bold text-foreground">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user?.displayName}</p>
-                      <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer">
-                  <User className="w-4 h-4 mr-2" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogOut} className="text-destructive cursor-pointer focus:text-destructive">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+
+          {/* Right Header Controls */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <a
+              href="tel:+919792954343"
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background border border-border text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Phone className="w-3.5 h-3.5 text-primary" />
+              <span>Helpline: 9792954343</span>
+            </a>
+
+            <button
+              type="button"
+              onClick={() => setLanguage(language === "en" ? "hi" : "en")}
+              aria-label={language === "en" ? "Switch language to Hindi" : "Switch language to English"}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-primary/40 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground text-xs font-medium transition-colors cursor-pointer"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>{language === "en" ? "हिंदी" : "English"}</span>
+            </button>
+
+            <Link
+              to="/portal/study-assistant"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-serif font-semibold hover:bg-primary/90 transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{isHi ? "विद्या AI" : "Vidya AI"}</span>
+            </Link>
           </div>
         </header>
 
-        {/* Page Content */}
+        {/* Mobile Sidebar Drawer */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSidebarOpen(false)}
+                className="fixed inset-0 bg-black/70 z-50 lg:hidden"
+              />
+              <motion.aside
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "tween", duration: 0.25 }}
+                className="fixed inset-y-0 left-0 w-72 bg-[#14171E] border-r border-border z-50 flex flex-col lg:hidden"
+              >
+                <div className="h-14 px-4 flex items-center justify-between border-b border-border">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-serif font-bold text-sm">
+                      PMP
+                    </div>
+                    <span className="font-serif font-bold text-sm text-foreground">
+                      P.M.P. Scholar Portal
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSidebarOpen(false)}
+                    aria-label="Close portal navigation menu"
+                    className="p-2 rounded-lg text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <nav className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
+                  {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium transition-all ${
+                          isActive
+                            ? "bg-primary text-primary-foreground font-semibold"
+                            : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon className="w-4 h-4 shrink-0" />
+                          <span>{item.name}</span>
+                        </div>
+                        {item.badge && (
+                          <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-black/20">
+                            {item.badge}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </nav>
+
+                <div className="p-4 border-t border-border bg-[#111318] space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-primary/15 border border-primary/40 text-primary flex items-center justify-center font-serif font-bold text-sm">
+                      {userInitial}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-foreground truncate">{displayName}</p>
+                      <p className="text-[11px] text-primary truncate">{displayRole}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link
+                      to="/"
+                      className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-border text-xs text-foreground"
+                    >
+                      <Home className="w-3.5 h-3.5" />
+                      <span>{isHi ? "मुख्य वेबसाइट" : "Home Site"}</span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-red-900/40 text-red-400 text-xs"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>{isHi ? "लॉग आउट" : "Sign Out"}</span>
+                    </button>
+                  </div>
+                </div>
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* Page Content Container */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
           <Outlet />
         </main>
@@ -218,3 +334,5 @@ export function PortalLayout() {
     </div>
   );
 }
+
+export default PortalLayout;
