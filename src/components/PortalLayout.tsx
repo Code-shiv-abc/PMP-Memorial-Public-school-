@@ -21,8 +21,8 @@ import { useLanguage } from "@/src/context/LanguageContext";
 
 export function PortalLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { profile, loading } = useUserProfile();
-  const { language, setLanguage, t } = useLanguage();
+  const { userData, loading } = useUserProfile();
+  const { language, setLanguage } = useLanguage();
   const isHi = language === "hi";
   const location = useLocation();
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ export function PortalLayout() {
 
   const navItems = [
     {
-      name: isHi ? "डैशबोर्ड (Dashboard)" : t("dashboard"),
+      name: isHi ? "डैशबोर्ड (Dashboard)" : "Dashboard",
       path: "/portal",
       icon: LayoutDashboard,
     },
@@ -49,30 +49,30 @@ export function PortalLayout() {
       badge: "AI",
     },
     {
-      name: isHi ? "विषय एवं पाठ्यक्रम (Subjects)" : t("courses"),
+      name: isHi ? "विषय एवं पाठ्यक्रम (Subjects)" : "Subjects & Courses",
       path: "/portal/courses",
       icon: BookOpen,
     },
     {
-      name: isHi ? "गृहकार्य (Assignments)" : t("assignments"),
+      name: isHi ? "गृहकार्य (Assignments)" : "Assignments",
       path: "/portal/assignments",
       icon: FileText,
     },
     {
-      name: isHi ? "समय सारणी (Timetable)" : t("schedule"),
+      name: isHi ? "समय सारणी (Timetable)" : "Schedule",
       path: "/portal/schedule",
       icon: Calendar,
     },
     {
-      name: isHi ? "सेटिंग्स (Settings)" : t("settings"),
+      name: isHi ? "सेटिंग्स (Settings)" : "Settings",
       path: "/portal/settings",
       icon: Settings,
     },
   ];
 
-  const displayName = profile?.name || (isHi ? "विद्यार्थी (Scholar)" : "PMP Scholar");
-  const displayRole = profile?.role
-    ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
+  const displayName = userData?.name || (isHi ? "विद्यार्थी (Scholar)" : "PMP Scholar");
+  const displayRole = userData?.role
+    ? userData.role.charAt(0).toUpperCase() + userData.role.slice(1)
     : "Student";
   const userInitial = displayName.charAt(0).toUpperCase();
 
@@ -82,7 +82,6 @@ export function PortalLayout() {
       <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-[#14171E] border-r border-border shrink-0 select-none">
         <div className="h-16 px-6 flex items-center justify-between border-b border-border">
           <Link to="/" className="flex items-center gap-3 group">
-            {/* High-Contrast Black-on-Gold Badge (Fixes 2.10:1 WCAG failure) */}
             <div className="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-serif font-black text-base shadow-md">
               PMP
             </div>
@@ -160,7 +159,7 @@ export function PortalLayout() {
               className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-red-900/40 text-red-400 hover:bg-red-950/40 text-xs transition-colors cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>{isHi ? "लॉग आउट" : t("signOut")}</span>
+              <span>{isHi ? "लॉग आउट" : "Sign Out"}</span>
             </button>
           </div>
         </div>
