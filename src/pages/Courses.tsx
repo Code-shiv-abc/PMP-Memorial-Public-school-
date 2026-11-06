@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, CheckCircle2, Sparkles, Search, Plus, Trash2, Users } from "lucide-react";
+import { CheckCircle2, Sparkles, Search, Plus, Trash2, Users } from "lucide-react";
 import { doc, updateDoc, arrayUnion } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { useUserProfile } from "../hooks/useUserProfile";
-import { useCourses } from "../hooks/useCourses";
+import { auth, db } from "@/lib/firebase";
 import { Course } from "../types/course";
 import toast from "react-hot-toast";
 
-const FALLBACK_SCHOOL_COURSES: Course[] = [
+const SCHOOL_COURSES: Course[] = [
   {
     id: "up-math-9-12",
     name: "Mathematics (गणित — UP Board & NCERT)",
@@ -89,22 +87,19 @@ const FALLBACK_SCHOOL_COURSES: Course[] = [
   },
 ];
 
-export default function Courses() {
-  const { profile } = useUserProfile();
-  const { courses: sanityCourses, loading } = useCourses();
+export function Courses() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDept, setSelectedDept] = useState("All");
-  const [localEnrolledIds, setLocalEnrolledIds] = useState<string[]>(
-    profile?.enrolledCourseIds || ["up-math-9-12", "up-science-9-12", "free-computer-3-12"]
-  );
+  const [localEnrolledIds, setLocalEnrolledIds] = useState<string[]>([
+    "up-math-9-12",
+    "up-science-9-12",
+    "free-computer-3-12",
+  ]);
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const catalog: Course[] =
-    sanityCourses && sanityCourses.length > 0 ? sanityCourses : FALLBACK_SCHOOL_COURSES;
+  const departments = ["All", ...Array.from(new Set(SCHOOL_COURSES.map((c) => c.department)))];
 
-  const departments = ["All", ...Array.from(new Set(catalog.map((c) => c.department)))];
-
-  const filteredCourses = catalog.filter((course) => {
+  const filteredCourses = SCHOOL_COURSES.filter((course) => {
     const matchesSearch =
       course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       course.instructor.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -118,8 +113,9 @@ export default function Courses() {
     setBusyId(course.id);
 
     try {
-      if (profile?.uid) {
-        const userRef = doc(db, "users", profile.uid);
+      const uid = auth.currentUser?.uid;
+      if (uid) {
+        const userRef = doc(db, "users", uid);
         await updateDoc(userRef, {
           enrolledCourseIds: arrayUnion(course.id),
           courses: arrayUnion({
@@ -133,8 +129,7 @@ export default function Courses() {
       }
       setLocalEnrolledIds((prev) => [...prev, course.id]);
       toast.success(`Enrolled in ${course.name}!`);
-    } catch (error) {
-      console.error("Enrollment update note:", error);
+    } catch {
       setLocalEnrolledIds((prev) => [...prev, course.id]);
       toast.success(`Added ${course.name} to your study list!`);
     } finally {
@@ -147,12 +142,11 @@ export default function Courses() {
     try {
       const updatedIds = localEnrolledIds.filter((id) => id !== courseId);
       setLocalEnrolledIds(updatedIds);
-      if (profile?.uid) {
-        const userRef = doc(db, "users", profile.uid);
-        const updatedCourses = (profile.courses || []).filter((c) => c.id !== courseId);
+      const uid = auth.currentUser?.uid;
+      if (uid) {
+        const userRef = doc(db, "users", uid);
         await updateDoc(userRef, {
           enrolledCourseIds: updatedIds,
-          courses: updatedCourses,
         });
       }
       toast.success(`Removed ${courseName} from your active subjects.`);
@@ -165,7 +159,6 @@ export default function Courses() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
           <span className="text-xs font-serif uppercase tracking-widest text-primary block mb-1">
@@ -188,7 +181,6 @@ export default function Courses() {
         </Link>
       </div>
 
-      {/* Search & Department Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -220,96 +212,91 @@ export default function Courses() {
         </div>
       </div>
 
-      {/* Course Grid */}
-      {loading ? (
-        <div className="p-12 text-center text-muted-foreground text-sm">
-          Loading school subjects...
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map((course) => {
-            const isEnrolled = localEnrolledIds.includes(course.id);
-            const isBusy = busyId === course.id;
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredCourses.map((course) => {
+          const isEnrolled = localEnrolledIds.includes(course.id);
+          const isBusy = busyId === course.id;
 
-            return (
-              <div
-                key={course.id}
-                className="bg-card border border-border hover:border-primary/40 rounded-2xl p-6 flex flex-col justify-between shadow-lg transition-all"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="px-2.5 py-1 rounded-md bg-primary/15 border border-primary/30 text-primary text-[11px] font-medium">
-                      {course.department}
+          return (
+            <div
+              key={course.id}
+              className="bg-card border border-border hover:border-primary/40 rounded-2xl p-6 flex flex-col justify-between shadow-lg transition-all"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="px-2.5 py-1 rounded-md bg-primary/15 border border-primary/30 text-primary text-[11px] font-medium">
+                    {course.department}
+                  </span>
+                  {isEnrolled && (
+                    <span className="inline-flex items-center gap-1 text-xs text-emerald-400 font-medium">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Enrolled</span>
                     </span>
-                    {isEnrolled && (
-                      <span className="inline-flex items-center gap-1 text-xs text-emerald-400 font-medium">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Enrolled</span>
-                      </span>
-                    )}
-                  </div>
-
-                  <h2 className="text-lg font-serif font-bold text-foreground leading-snug">
-                    {course.name}
-                  </h2>
-
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {course.description}
-                  </p>
-
-                  <div className="pt-2 space-y-1 text-xs text-neutral-300 border-t border-border/60">
-                    <div>
-                      <strong className="text-muted-foreground">Faculty:</strong> {course.instructor}
-                    </div>
-                    <div>
-                      <strong className="text-muted-foreground">Timing:</strong> {course.schedule}
-                    </div>
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Users className="w-3.5 h-3.5 text-primary" />
-                      <span>
-                        {course.enrolled} / {course.capacity} Students Enrolled
-                      </span>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
-                <div className="pt-5 mt-5 border-t border-border flex items-center gap-2">
-                  {isEnrolled ? (
-                    <>
-                      <Link
-                        to="/portal/study-assistant"
-                        className="flex-1 py-2.5 px-3 rounded-xl bg-primary/15 hover:bg-primary hover:text-primary-foreground text-primary border border-primary/30 text-xs font-serif font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                      >
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>Study with Vidya AI</span>
-                      </Link>
-                      <button
-                        type="button"
-                        disabled={isBusy}
-                        onClick={() => handleDropCourse(course.id, course.name)}
-                        aria-label={`Remove ${course.name}`}
-                        className="p-2.5 rounded-xl bg-background hover:bg-red-950/50 text-muted-foreground hover:text-red-400 border border-border transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </>
-                  ) : (
+                <h2 className="text-lg font-serif font-bold text-foreground leading-snug">
+                  {course.name}
+                </h2>
+
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {course.description}
+                </p>
+
+                <div className="pt-2 space-y-1 text-xs text-neutral-300 border-t border-border/60">
+                  <div>
+                    <strong className="text-muted-foreground">Faculty:</strong> {course.instructor}
+                  </div>
+                  <div>
+                    <strong className="text-muted-foreground">Timing:</strong> {course.schedule}
+                  </div>
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <Users className="w-3.5 h-3.5 text-primary" />
+                    <span>
+                      {course.enrolled} / {course.capacity} Students Enrolled
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-5 mt-5 border-t border-border flex items-center gap-2">
+                {isEnrolled ? (
+                  <>
+                    <Link
+                      to="/portal/study-assistant"
+                      className="flex-1 py-2.5 px-3 rounded-xl bg-primary/15 hover:bg-primary hover:text-primary-foreground text-primary border border-primary/30 text-xs font-serif font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Study with Vidya AI</span>
+                    </Link>
                     <button
                       type="button"
                       disabled={isBusy}
-                      onClick={() => handleEnroll(course)}
-                      className="w-full py-2.5 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-serif font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors cursor-pointer min-w-[100px]"
+                      onClick={() => handleDropCourse(course.id, course.name)}
+                      aria-label={`Remove ${course.name}`}
+                      className="p-2.5 rounded-xl bg-background hover:bg-red-950/50 text-muted-foreground hover:text-red-400 border border-border transition-colors cursor-pointer"
                     >
-                      <Plus className="w-4 h-4" />
-                      <span>{isBusy ? "Adding..." : "Add to My Subjects"}</span>
+                      <Trash2 className="w-4 h-4" />
                     </button>
-                  )}
-                </div>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={isBusy}
+                    onClick={() => handleEnroll(course)}
+                    className="w-full py-2.5 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-serif font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors cursor-pointer min-w-[100px]"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>{isBusy ? "Adding..." : "Add to My Subjects"}</span>
+                  </button>
+                )}
               </div>
-            );
-          })}
-        </div>
-      )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
+
+export default Courses;
