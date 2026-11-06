@@ -11,17 +11,17 @@ interface CacheEntry {
   expiresAt: number;
 }
 
-// 1. Warm Serverless Memory Cache (0 RPM / 0 Tokens for repeated questions across students)
+// 1. Warm Serverless Memory Cache (0 RPM / 0 Tokens for repeated questions)
 const CACHE_TTL_MS = 1000 * 60 * 30; // 30 minutes
 const MAX_CACHE_ENTRIES = 150;
 const responseCache = new Map<string, CacheEntry>();
 
-// 2. Per-IP Rate Guard (Protects your 15 RPM Free Tier from rapid button clicking)
+// 2. Per-IP Rate Guard
 const RATE_WINDOW_MS = 60_000;
-const MAX_REQ_PER_IP_PER_MIN = 8;
+const MAX_REQ_PER_IP_PER_MIN = 10;
 const ipHits = new Map<string, { count: number; resetAt: number }>();
 
-// 3. Zero-RPM Precomputed Answers for Starter Prompts & Common Greetings
+// 3. Zero-RPM Precomputed Answers for Starter Prompts & Greetings
 const INSTANT_ANSWERS: Record<string, string> = {
   'explain photosynthesis in simple hindi and english': `### प्रकाश संश्लेषण (Photosynthesis)
 
@@ -112,12 +112,11 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function isComplexQuery(query: string): boolean {
-  if (query.length > 220) return true;
-  const hasMathFormula = /\d+\s*[+\-*/=^]\s*\d+/.test(query);
-  const hardKeywords = ['derive', 'prove', 'integration', 'differentiation', 'numerical', 'सिद्ध कीजिए', 'निगमन'];
-  const qLower = query.toLowerCase();
-  return hasMathFormula || hardKeywords.some((kw) => qLower.includes(kw));
+function getSafeModel(envVal: string | undefined, fallback: string): string {
+  if (!envVal || envVal.includes('3.8') || envVal.includes('undefined')) {
+    return fallback;
+  }
+  return envVal.trim();
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -153,7 +152,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const normQuery = normalizeKey(cleanQuery);
 
-  // Check Zero-RPM Instant Greetings & Starter Prompts
+  // 1. Instant Zero-RPM Greetings & Starter Prompts
   if (['hi', 'hello', 'namaste', 'नमस्ते', 'प्रणाम', 'hey'].includes(normQuery)) {
     return res.status(200).json({
       reply: `**नमस्ते! (Namaste!)** मैं **विद्या AI (Vidya AI)** हूँ — पी. एम. पी. मेमोरियल पब्लिक स्कूल, शाहपुर (गोंडा) की आपकी अध्ययन सहायिका।\n\nआप मुझसे **${selectedClass || 'अपनी कक्षा'}** के **${selectedSubject || 'किसी भी विषय'}** का कोई भी प्रश्न हिंदी या अंग्रेजी में पूछ सकते हैं।\n\n**Follow-up:** आज आप किस अध्याय (Chapter) या प्रश्न का अभ्यास करना चाहेंगे?`,
@@ -165,33 +164,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ reply: INSTANT_ANSWERS[normQuery], cached: true });
   }
 
-  // Check Warm Server LRU Cache (when no follow-up context overrides it)
+  // 2. Check Warm Server Cache
   const historyList: HistoryTurn[] = Array.isArray(history) ? history.slice(-4) : [];
-  const cacheKey = `${selectedClass || ''}|${selectedSubject || ''}|${languageMode || ''}|${historyList.length === 0 ? normQuery : `${ normalizeKey(historyList[historyList.length - 1]?.text || '') }>${normQuery}`}`;
+  const cacheKey = `${selectedClass || ''}|${selectedSubject || ''}|${languageMode || ''}|${
+    historyList.length === 0 ? normQuery : `${normalizeKey(historyList[historyList.length - 1]?.text || '')}>${normQuery}`
+  }`;
 
   const cachedHit = responseCache.get(cacheKey);
   if (cachedHit && cachedHit.expiresAt > now) {
     return res.status(200).json({ reply: cachedHit.reply, cached: true });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  // Valid Gemini 2.5 models — flash-lite has the highest free RPM & RPD quota
-  const liteModel = process.env.GEMINI_MODEL_FAST || 'gemini-2.5-flash-lite';
-  const mainModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  // 3. Check ALL possible API Key Environment Variable names in Vercel
+  const apiKey = (
+    process.env.GEMINI_API_KEY ||
+    process.env.VITE_GEMINI_API_KEY ||
+    process.env.GOOGLE_API_KEY ||
+    ''
+  ).trim();
 
-  if (!apiKey) {
-    console.error('Server configuration error: GEMINI_API_KEY is missing');
-    return res.status(500).json({ error: 'The AI is unavailable right now. Please contact 9792954343.' });
+  if (!apiKey || apiKey === 'your_actual_api_key_here') {
+    console.error('Server configuration error: GEMINI_API_KEY is missing in Vercel Environment Variables');
+    return res.status(500).json({
+      error: 'GEMINI_API_KEY is missing in Vercel Settings -> Environment Variables. Please add GEMINI_API_KEY in Vercel and Redeploy.'
+    });
   }
 
   const ai = new GoogleGenAI({ apiKey });
 
-  // Ultra-compact system instruction (~42 tokens) to save input TPM on every request
   const systemInstruction = `You are Vidya AI, tutor at PMP Memorial Public School, Shahpur Gonda (UP Board/NCERT).
 Class: ${selectedClass || 'School'} | Subject: ${selectedSubject || 'General'} | Lang: ${languageMode || 'Bilingual (Hindi+English)'}.
 Rules: Give clear, concise, step-by-step points (<220 words). End with 1 short follow-up question prefixed with "Follow-up:".`;
 
-  // Build compact multi-turn contents array (trims old replies to 320 chars to save tokens)
   const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
   for (const turn of historyList) {
     if (!turn?.text || typeof turn.text !== 'string') continue;
@@ -202,13 +206,15 @@ Rules: Give clear, concise, step-by-step points (<220 words). End with 1 short f
   }
   contents.push({ role: 'user', parts: [{ text: cleanQuery }] });
 
-  // Route 85% of queries to gemini-2.5-flash-lite first to maximize free daily requests
-  const modelOrder = isComplexQuery(cleanQuery)
-    ? [mainModel, liteModel]
-    : [liteModel, mainModel];
+  // 4. Multi-model fallback chain (ignores broken 'gemini-3.8-flash' if set in Vercel env vars)
+  const primaryLite = getSafeModel(process.env.GEMINI_MODEL_FAST, 'gemini-2.5-flash-lite');
+  const primaryMain = getSafeModel(process.env.GEMINI_MODEL, 'gemini-2.5-flash');
+  const modelChain = Array.from(new Set([primaryLite, primaryMain, 'gemini-2.0-flash']));
 
-  for (let i = 0; i < modelOrder.length; i++) {
-    const currentModel = modelOrder[i];
+  let lastErrorMsg = '';
+
+  for (let i = 0; i < modelChain.length; i++) {
+    const currentModel = modelChain[i];
     try {
       const response = await ai.models.generateContent({
         model: currentModel,
@@ -217,14 +223,11 @@ Rules: Give clear, concise, step-by-step points (<220 words). End with 1 short f
           systemInstruction,
           temperature: 0.35,
           maxOutputTokens: 550,
-          // Disable hidden thinking tokens so responses return in ~1.5s and save 70% token quota
-          thinkingConfig: { thinkingBudget: 0 }
         }
       });
 
       const reply = response.text?.trim() || 'कृपया अपना प्रश्न थोड़ा स्पष्ट रूप से लिखें (Please rephrase your question).';
 
-      // Save in Warm Server Cache
       if (responseCache.size >= MAX_CACHE_ENTRIES) {
         const oldestKey = responseCache.keys().next().value;
         if (oldestKey) responseCache.delete(oldestKey);
@@ -233,31 +236,36 @@ Rules: Give clear, concise, step-by-step points (<220 words). End with 1 short f
 
       return res.status(200).json({ reply, model: currentModel });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`Vidya AI error (${currentModel}, try ${i + 1}):`, msg);
+      lastErrorMsg = err instanceof Error ? err.message : String(err);
+      console.error(`Vidya AI error (${currentModel}, try ${i + 1}):`, lastErrorMsg);
 
-      const isRecoverable =
-        msg.includes('429') ||
-        msg.includes('RESOURCE_EXHAUSTED') ||
-        msg.includes('503') ||
-        msg.includes('UNAVAILABLE') ||
-        msg.includes('404') ||
-        msg.includes('NOT_FOUND');
-
-      if (isRecoverable && i < modelOrder.length - 1) {
-        await wait(600); // Fast 600ms switch to backup model (stays well inside Vercel Hobby 10s limit)
-        continue;
-      }
-
-      if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('503')) {
-        return res.status(503).json({
-          error: 'अभी बहुत से विद्यार्थी प्रश्न पूछ रहे हैं। कृपया 20 सेकंड बाद पुनः प्रयास करें। (High traffic, please retry in 20s.)'
+      // If API key itself is invalid/leaked/expired, stop immediately and report it clearly
+      if (
+        lastErrorMsg.includes('API_KEY_INVALID') ||
+        lastErrorMsg.includes('API key not valid') ||
+        lastErrorMsg.includes('PERMISSION_DENIED') ||
+        lastErrorMsg.includes('leaked')
+      ) {
+        return res.status(500).json({
+          error: 'Your GEMINI_API_KEY in Vercel is invalid or expired. Please generate a new key in Google AI Studio and update Vercel Environment Variables.'
         });
       }
 
-      return res.status(500).json({
-        error: 'The AI is unavailable right now. Please contact 9792954343.'
-      });
+      // Otherwise try the next model in modelChain after a brief 400ms pause
+      if (i < modelChain.length - 1) {
+        await wait(400);
+        continue;
+      }
     }
   }
+
+  if (lastErrorMsg.includes('429') || lastErrorMsg.includes('RESOURCE_EXHAUSTED') || lastErrorMsg.includes('quota')) {
+    return res.status(429).json({
+      error: 'अभी बहुत से विद्यार्थी प्रश्न पूछ रहे हैं (Free API per-minute limit reached). कृपया 30 सेकंड बाद पुनः प्रयास करें।'
+    });
+  }
+
+  return res.status(500).json({
+    error: `The AI is unavailable right now (${lastErrorMsg.slice(0, 90)}). Please contact 9792954343.`
+  });
 }
