@@ -579,4 +579,295 @@ export default function StudyAssistant() {
               value={selectedSubject}
               onChange={(e) => setSelectedSubject(e.target.value)}
               className="bg-transparent text-neutral-100 font-medium focus:outline-none max-w-[135px] truncate cursor-pointer"
-           
+            >
+              {SUBJECTS.map((s) => (
+                <option key={s} value={s} className="bg-neutral-900 text-white">{s}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1 bg-neutral-900 border border-neutral-700/80 rounded-lg px-2.5 py-1 text-xs">
+            <select
+              aria-label="Answer Language"
+              value={languageMode}
+              onChange={(e) => setLanguageMode(e.target.value)}
+              className="bg-transparent text-amber-300 font-medium focus:outline-none max-w-[140px] truncate cursor-pointer"
+            >
+              {LANGUAGE_MODES.map((m) => (
+                <option key={m.id} value={m.id} className="bg-neutral-900 text-white">
+                  {isHi ? m.labelHi : m.labelEn}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Right Action Buttons (Always visible on both Mobile & Desktop) */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            type="button"
+            onClick={handleToggleLanguage}
+            aria-label={isHi ? 'Switch to English' : 'हिंदी में बदलें'}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/15 hover:bg-amber-500 text-amber-300 hover:text-neutral-950 border border-amber-500/40 transition-colors cursor-pointer"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span>{isHi ? 'EN' : 'हिंदी'}</span>
+          </button>
+
+          {messages.length > 0 && (
+            <button
+              type="button"
+              onClick={handleClearChat}
+              aria-label={t('clearChat')}
+              title={t('clearChat')}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-neutral-900 hover:bg-red-950/60 text-neutral-300 hover:text-red-300 border border-neutral-700 transition-colors cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{t('clearChat')}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Collapsible Mobile Filter Drawer (Only visible when student taps the Class/Subject pill) */}
+      {mobileFiltersOpen && (
+        <div className="md:hidden px-3 py-2.5 bg-neutral-900 border-b border-neutral-800 grid grid-cols-1 gap-2 text-xs shrink-0">
+          <div className="flex items-center justify-between gap-2 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5">
+            <span className="text-neutral-400">{isHi ? 'कक्षा:' : 'Class:'}</span>
+            <select
+              value={selectedClass}
+              onChange={(e) => setSelectedClass(e.target.value)}
+              className="bg-transparent text-white font-medium focus:outline-none text-right"
+            >
+              {SCHOOL_CLASSES.map((c) => (
+                <option key={c} value={c} className="bg-neutral-900 text-white">{c}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center justify-between gap-2 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5">
+            <span className="text-neutral-400">{isHi ? 'विषय:' : 'Subject:'}</span>
+            <select
+              value={selectedSubject}
+              onChange={(e) => setSelectedSubject(e.target.value)}
+              className="bg-transparent text-white font-medium focus:outline-none text-right"
+            >
+              {SUBJECTS.map((s) => (
+                <option key={s} value={s} className="bg-neutral-900 text-white">{s}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center justify-between gap-2 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5">
+            <span className="text-neutral-400">{isHi ? 'उत्तर की भाषा:' : 'Language:'}</span>
+            <select
+              value={languageMode}
+              onChange={(e) => setLanguageMode(e.target.value)}
+              className="bg-transparent text-amber-300 font-medium focus:outline-none text-right"
+            >
+              {LANGUAGE_MODES.map((m) => (
+                <option key={m.id} value={m.id} className="bg-neutral-900 text-white">
+                  {isHi ? m.labelHi : m.labelEn}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Spacious Full-Width Chat & Formula Reading Stream */}
+      <div
+        role="log"
+        aria-live="polite"
+        aria-label="Vidya AI conversation messages"
+        className="flex-1 overflow-y-auto px-3 sm:px-8 py-4 sm:py-6 space-y-5"
+      >
+        {messages.length === 0 ? (
+          <div className="min-h-full flex flex-col items-center justify-center text-center max-w-2xl mx-auto py-2">
+            <div className="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-3 shadow-lg">
+              <Bot className="w-6 h-6" />
+            </div>
+            <h2 className="text-lg sm:text-2xl font-serif font-bold text-white mb-1.5" lang="hi">
+              {isHi
+                ? 'नमस्ते! मैं विद्या (Vidya AI) हूँ'
+                : 'नमस्ते! Ask Vidya AI Anything From Your Syllabus'}
+            </h2>
+            <p className="text-xs sm:text-sm text-neutral-300 mb-5 max-w-md leading-relaxed">
+              {isHi
+                ? `${shortClassLabel} • ${shortSubjectLabel} का कोई भी सूत्र, प्रश्न या अध्याय नीचे चुनें:`
+                : `Tap a starter topic below or ask any ${shortSubjectLabel} question:`}
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full text-left">
+              {STARTER_PROMPTS.map((item) => (
+                <button
+                  key={item.query}
+                  type="button"
+                  onClick={() => handleSend(item.query)}
+                  className="p-3 rounded-xl bg-neutral-900/90 hover:bg-neutral-800 border border-neutral-800 hover:border-amber-500/50 text-xs sm:text-sm text-neutral-100 transition-all flex items-start gap-2.5 group cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                  <span className="leading-snug">{isHi ? item.hi : item.en}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="max-w-3xl mx-auto w-full space-y-5">
+            {messages.map((msg, idx) => {
+              const isLastAssistant = msg.role === 'assistant' && idx === messages.length - 1 && !isLoading;
+              return (
+                <div key={msg.id} className="space-y-2.5">
+                  {msg.role === 'user' ? (
+                    <div className="flex justify-end">
+                      <div className="max-w-[88%] sm:max-w-[78%] rounded-2xl rounded-tr-sm bg-amber-500 text-neutral-950 font-medium px-3.5 py-2.5 text-sm sm:text-base leading-relaxed shadow-md whitespace-pre-wrap">
+                        {msg.text}
+                      </div>
+                    </div>
+                  ) : (
+                    /* Full-Width Smartphone & Desktop Study Card */
+                    <div className="rounded-2xl bg-neutral-900/95 border border-neutral-800 p-3.5 sm:p-6 shadow-lg">
+                      <div className="flex items-center justify-between gap-2 pb-2.5 mb-3 border-b border-neutral-800/80">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-6 h-6 rounded-md bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                            <Bot className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="text-xs font-serif font-bold text-amber-400 truncate">
+                            Vidya AI • {shortSubjectLabel}
+                          </span>
+                          {msg.cached && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-full shrink-0">
+                              <Zap className="w-2.5 h-2.5" />
+                              <span>Instant</span>
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleSpeak(msg.id, msg.text)}
+                            aria-label={speakingId === msg.id ? 'Stop reading aloud' : 'Read answer aloud'}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] bg-neutral-950 hover:bg-neutral-800 text-neutral-300 border border-neutral-800 transition-colors cursor-pointer"
+                          >
+                            {speakingId === msg.id ? (
+                              <>
+                                <VolumeX className="w-3 h-3 text-amber-400" />
+                                <span>{isHi ? 'रोकें' : 'Stop'}</span>
+                              </>
+                            ) : (
+                              <>
+                                <Volume2 className="w-3 h-3 text-amber-400" />
+                                <span>{isHi ? 'सुनें' : 'Listen'}</span>
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(msg.id, msg.text)}
+                            aria-label="Copy answer text"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] bg-neutral-950 hover:bg-neutral-800 text-neutral-300 border border-neutral-800 transition-colors cursor-pointer"
+                          >
+                            {copiedId === msg.id ? (
+                              <>
+                                <Check className="w-3 h-3 text-emerald-400" />
+                                <span className="text-emerald-400">{isHi ? 'कॉपी' : 'Copied'}</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" />
+                                <span>{isHi ? 'कॉपी' : 'Copy'}</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="markdown-body select-text">
+                        <MemoizedMarkdown text={msg.text} />
+                      </div>
+                    </div>
+                  )}
+
+                  {isLastAssistant && (
+                    <div className="flex flex-wrap gap-1.5 pt-0.5">
+                      {QUICK_FOLLOW_UPS.map((chip) => (
+                        <button
+                          key={chip.en}
+                          type="button"
+                          onClick={() => handleSend(isHi ? chip.queryHi : chip.queryEn)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs bg-neutral-950 hover:bg-amber-500/15 text-neutral-200 hover:text-amber-300 border border-neutral-800 hover:border-amber-500/40 transition-colors cursor-pointer"
+                        >
+                          <HelpCircle className="w-3 h-3 text-amber-400 shrink-0" />
+                          <span>{isHi ? chip.hi : chip.en}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="max-w-3xl mx-auto w-full">
+            <div className="rounded-2xl bg-neutral-900/90 border border-neutral-800 p-4 flex items-center gap-3 text-xs sm:text-sm text-neutral-200">
+              <div className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                <Bot className="w-4 h-4 animate-pulse" />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-bounce" />
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-bounce [animation-delay:0.2s]" />
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-bounce [animation-delay:0.4s]" />
+                <span className="ml-1 font-medium">
+                  {isHi ? 'विद्या AI उत्तर लिख रही है...' : 'Vidya AI is writing your explanation...'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* 3. Sleek Mobile-First Composer */}
+      <div className="px-2.5 sm:px-6 py-2.5 bg-neutral-950 border-t border-neutral-800 pb-[max(0.5rem,env(safe-area-inset-bottom))] shrink-0">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSend();
+          }}
+          className="flex items-end gap-2 max-w-3xl mx-auto"
+        >
+          <textarea
+            ref={textareaRef}
+            aria-label={isHi ? 'अपना प्रश्न यहाँ लिखें' : 'Ask a study question in Hindi or English'}
+            rows={1}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            placeholder={
+              isHi
+                ? `${shortSubjectLabel} का कोई भी प्रश्न या सूत्र पूछें...`
+                : `Ask any ${shortSubjectLabel} question or formula...`
+            }
+            className="flex-1 bg-neutral-900 border border-neutral-700/90 focus:border-amber-500 rounded-xl px-3.5 py-2.5 text-[15px] sm:text-base text-white placeholder-neutral-400 focus:outline-none resize-none leading-snug max-h-28 overflow-y-auto"
+          />
+          <button
+            type="submit"
+            aria-label={t('send')}
+            disabled={!input.trim() || isLoading || cooldown}
+            className="h-11 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:hover:bg-amber-500 text-neutral-950 font-serif font-bold text-sm transition-colors flex items-center justify-center gap-1.5 shrink-0 cursor-pointer shadow-md"
+          >
+            <Send className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('send')}</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
