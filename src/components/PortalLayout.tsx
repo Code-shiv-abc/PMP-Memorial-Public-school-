@@ -15,17 +15,22 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { logOut } from "@/lib/firebase";
-import { useUserProfile } from "@/src/hooks/useUserProfile";
+import { onAuthStateChanged, type User } from "firebase/auth";
+import { auth, logOut } from "@/lib/firebase";
 import { useLanguage } from "@/src/context/LanguageContext";
 
 export function PortalLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { userData, loading } = useUserProfile();
+  const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
   const { language, setLanguage } = useLanguage();
   const isHi = language === "hi";
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => setCurrentUser(u));
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -70,10 +75,8 @@ export function PortalLayout() {
     },
   ];
 
-  const displayName = userData?.name || (isHi ? "विद्यार्थी (Scholar)" : "PMP Scholar");
-  const displayRole = userData?.role
-    ? userData.role.charAt(0).toUpperCase() + userData.role.slice(1)
-    : "Student";
+  const displayName =
+    currentUser?.displayName || (isHi ? "विद्यार्थी (Scholar)" : "PMP Scholar");
   const userInitial = displayName.charAt(0).toUpperCase();
 
   return (
@@ -96,7 +99,6 @@ export function PortalLayout() {
           </Link>
         </div>
 
-        {/* Navigation Links */}
         <nav className="flex-1 px-3 py-5 space-y-1.5 overflow-y-auto" aria-label="Portal Navigation">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -131,7 +133,6 @@ export function PortalLayout() {
           })}
         </nav>
 
-        {/* User Footer in Sidebar */}
         <div className="p-4 border-t border-border bg-[#111318] space-y-3">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-primary/15 border border-primary/40 text-primary flex items-center justify-center font-serif font-bold text-sm shrink-0">
@@ -139,9 +140,9 @@ export function PortalLayout() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold text-foreground truncate">
-                {loading ? "..." : displayName}
+                {displayName}
               </p>
-              <p className="text-[11px] text-primary truncate">{displayRole} • Shahpur, Gonda</p>
+              <p className="text-[11px] text-primary truncate">Student • Shahpur, Gonda</p>
             </div>
           </div>
 
@@ -167,7 +168,6 @@ export function PortalLayout() {
 
       {/* Main Content Column */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Portal Header */}
         <header className="h-14 sm:h-16 bg-[#14171E]/95 backdrop-blur-md border-b border-border px-3 sm:px-6 flex items-center justify-between sticky top-0 z-40">
           <div className="flex items-center gap-2.5">
             <button
@@ -197,7 +197,6 @@ export function PortalLayout() {
             </div>
           </div>
 
-          {/* Right Header Controls */}
           <div className="flex items-center gap-2 sm:gap-3">
             <a
               href="tel:+919792954343"
@@ -227,7 +226,6 @@ export function PortalLayout() {
           </div>
         </header>
 
-        {/* Mobile Sidebar Drawer */}
         <AnimatePresence>
           {sidebarOpen && (
             <>
@@ -299,7 +297,7 @@ export function PortalLayout() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-semibold text-foreground truncate">{displayName}</p>
-                      <p className="text-[11px] text-primary truncate">{displayRole}</p>
+                      <p className="text-[11px] text-primary truncate">Student</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -325,7 +323,6 @@ export function PortalLayout() {
           )}
         </AnimatePresence>
 
-        {/* Page Content Container */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
           <Outlet />
         </main>
