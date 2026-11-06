@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   BookOpen,
-  Calendar,
   CheckCircle2,
   Clock,
   Sparkles,
@@ -11,11 +10,13 @@ import {
   GraduationCap,
   Monitor
 } from "lucide-react";
-import { UserProfile } from "../types/user";
+import { auth } from "@/lib/firebase";
 import { useLanguage } from "../context/LanguageContext";
 
-interface StudentDashboardProps {
-  userData: UserProfile;
+interface HomeworkItem {
+  id: string;
+  title: string;
+  dueDate: string;
 }
 
 const DEFAULT_UP_BOARD_SUBJECTS = [
@@ -42,52 +43,38 @@ const DEFAULT_UP_BOARD_SUBJECTS = [
   },
 ];
 
-export default function StudentDashboard({ userData }: StudentDashboardProps) {
-  const { language, t } = useLanguage();
+const INITIAL_HOMEWORK: HomeworkItem[] = [
+  {
+    id: "t1",
+    title: "Trigonometry Exercise 8.1 & Identities Revision (त्रिकोणमिति अभ्यास)",
+    dueDate: "Tomorrow",
+  },
+  {
+    id: "t2",
+    title: "Science Chapter 1: Chemical Reactions & Equations Notes",
+    dueDate: "This Friday",
+  },
+  {
+    id: "t3",
+    title: "Computer Practical: MS Word & Internet Basics Lab",
+    dueDate: "Saturday",
+  },
+];
+
+export function StudentDashboard(_props?: Record<string, unknown>) {
+  const { language } = useLanguage();
   const isHi = language === "hi";
 
-  const initialTasks =
-    userData.tasks && userData.tasks.length > 0
-      ? userData.tasks
-      : [
-          {
-            id: "t1",
-            title: "Trigonometry Exercise 8.1 & Identities Revision (त्रिकोणमिति अभ्यास)",
-            dueDate: "Tomorrow",
-            completed: false,
-          },
-          {
-            id: "t2",
-            title: "Science Chapter 1: Chemical Reactions & Equations Notes",
-            dueDate: "This Friday",
-            completed: false,
-          },
-          {
-            id: "t3",
-            title: "Computer Practical: MS Word & Internet Basics Lab",
-            dueDate: "Saturday",
-            completed: true,
-          },
-        ];
-
-  const [tasks, setTasks] = useState(initialTasks);
+  const studentName = auth.currentUser?.displayName || (isHi ? "विद्यार्थी" : "Scholar");
+  const [completedIds, setCompletedIds] = useState<string[]>(["t3"]);
 
   const toggleTask = (id: string) => {
-    setTasks((prev) =>
-      prev.map((task) => (task.id === id ? { ...task, completed: !task.completed } : task))
+    setCompletedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
 
-  // Convert legacy 4.0 GPA into a realistic UP Board Percentage (e.g. 3.8 -> 88%)
-  const rawGpa = typeof userData.gpa === "number" && userData.gpa > 0 ? userData.gpa : 3.6;
-  const percentageScore = rawGpa <= 5 ? Math.min(98, Math.round(rawGpa * 23.5)) : Math.round(rawGpa);
-  const attendanceRate =
-    typeof userData.attendance === "number" && userData.attendance > 0 ? userData.attendance : 94;
-
-  const activeCourses =
-    userData.courses && userData.courses.length > 0 ? userData.courses : DEFAULT_UP_BOARD_SUBJECTS;
-
-  const pendingTasksCount = tasks.filter((task) => !task.completed).length;
+  const pendingTasksCount = INITIAL_HOMEWORK.length - completedIds.length;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
@@ -99,7 +86,7 @@ export default function StudentDashboard({ userData }: StudentDashboardProps) {
             <span>P.M.P. Memorial Public School • Shahpur, Gonda</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">
-            {isHi ? `नमस्ते, ${userData.name}!` : `${t("welcome")}, ${userData.name}!`}
+            {isHi ? `नमस्ते, ${studentName}!` : `Welcome back, ${studentName}!`}
           </h1>
           <p className="text-sm text-muted-foreground max-w-2xl">
             {isHi
@@ -135,9 +122,7 @@ export default function StudentDashboard({ userData }: StudentDashboardProps) {
             </span>
             <Award className="w-5 h-5 text-primary" />
           </div>
-          <div className="text-3xl font-serif font-bold text-foreground">
-            {percentageScore}%
-          </div>
+          <div className="text-3xl font-serif font-bold text-foreground">88%</div>
           <p className="text-xs text-emerald-400 mt-1">
             {isHi ? "प्रथम श्रेणी (First Division — Honours)" : "First Division (Honours Track)"}
           </p>
@@ -146,13 +131,11 @@ export default function StudentDashboard({ userData }: StudentDashboardProps) {
         <div className="bg-card border border-border rounded-2xl p-5 shadow-md">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-serif uppercase tracking-wider text-muted-foreground">
-              {isHi ? "उपस्थिति (Attendance)" : t("attendance")}
+              {isHi ? "उपस्थिति (Attendance)" : "Attendance"}
             </span>
             <CheckCircle2 className="w-5 h-5 text-emerald-400" />
           </div>
-          <div className="text-3xl font-serif font-bold text-foreground">
-            {attendanceRate}%
-          </div>
+          <div className="text-3xl font-serif font-bold text-foreground">94%</div>
           <p className="text-xs text-muted-foreground mt-1">
             {isHi ? "नियमित उपस्थिति (Regular Scholar)" : "Regular attendance record"}
           </p>
@@ -166,7 +149,7 @@ export default function StudentDashboard({ userData }: StudentDashboardProps) {
             <BookOpen className="w-5 h-5 text-primary" />
           </div>
           <div className="text-3xl font-serif font-bold text-foreground">
-            {activeCourses.length}
+            {DEFAULT_UP_BOARD_SUBJECTS.length}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             {isHi ? "निःशुल्क कंप्यूटर एवं कोचिंग सहित" : "Includes Free Computer & Coaching"}
@@ -193,7 +176,6 @@ export default function StudentDashboard({ userData }: StudentDashboardProps) {
 
       {/* 3. Two-Column Subjects & Homework Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Enrolled Subjects List */}
         <div className="lg:col-span-7 bg-card border border-border rounded-2xl p-6 shadow-lg space-y-5">
           <div className="flex items-center justify-between border-b border-border pb-4">
             <div>
@@ -208,13 +190,13 @@ export default function StudentDashboard({ userData }: StudentDashboardProps) {
               to="/portal/courses"
               className="text-xs font-serif font-semibold text-primary hover:underline flex items-center gap-1"
             >
-              <span>{isHi ? "सभी विषय" : t("viewAll")}</span>
+              <span>{isHi ? "सभी विषय" : "View All"}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
           <div className="space-y-4">
-            {activeCourses.map((course) => (
+            {DEFAULT_UP_BOARD_SUBJECTS.map((course) => (
               <div
                 key={course.id}
                 className="p-4 rounded-xl bg-background border border-border hover:border-primary/40 transition-all space-y-3"
@@ -238,7 +220,6 @@ export default function StudentDashboard({ userData }: StudentDashboardProps) {
                   </Link>
                 </div>
 
-                {/* High-contrast dark progress bar (Fixes light bg-slate-200 bug) */}
                 <div className="space-y-1">
                   <div className="flex justify-between text-[11px]">
                     <span className="text-muted-foreground">
@@ -266,42 +247,44 @@ export default function StudentDashboard({ userData }: StudentDashboardProps) {
                 {isHi ? "गृहकार्य एवं अभ्यास (Tasks)" : "Homework & Revision Tasks"}
               </h2>
               <span className="text-xs text-primary font-medium">
-                {tasks.filter((tItem) => tItem.completed).length}/{tasks.length} Done
+                {completedIds.length}/{INITIAL_HOMEWORK.length} Done
               </span>
             </div>
 
             <div className="space-y-2.5">
-              {tasks.map((task) => (
-                <label
-                  key={task.id}
-                  htmlFor={`task-${task.id}`}
-                  className="flex items-start gap-3 p-3 rounded-xl bg-background border border-border hover:border-primary/40 cursor-pointer transition-colors"
-                >
-                  <input
-                    id={`task-${task.id}`}
-                    type="checkbox"
-                    checked={task.completed}
-                    onChange={() => toggleTask(task.id)}
-                    className="mt-1 h-4 w-4 rounded border-neutral-600 accent-amber-500 cursor-pointer"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={`text-xs sm:text-sm font-medium leading-snug ${
-                        task.completed ? "line-through text-muted-foreground" : "text-foreground"
-                      }`}
-                    >
-                      {task.title}
-                    </p>
-                    <span className="text-[11px] text-primary block mt-1">
-                      Due: {task.dueDate}
-                    </span>
-                  </div>
-                </label>
-              ))}
+              {INITIAL_HOMEWORK.map((task) => {
+                const isDone = completedIds.includes(task.id);
+                return (
+                  <label
+                    key={task.id}
+                    htmlFor={`task-${task.id}`}
+                    className="flex items-start gap-3 p-3 rounded-xl bg-background border border-border hover:border-primary/40 cursor-pointer transition-colors"
+                  >
+                    <input
+                      id={`task-${task.id}`}
+                      type="checkbox"
+                      checked={isDone}
+                      onChange={() => toggleTask(task.id)}
+                      className="mt-1 h-4 w-4 rounded border-neutral-600 accent-amber-500 cursor-pointer"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className={`text-xs sm:text-sm font-medium leading-snug ${
+                          isDone ? "line-through text-muted-foreground" : "text-foreground"
+                        }`}
+                      >
+                        {task.title}
+                      </p>
+                      <span className="text-[11px] text-primary block mt-1">
+                        Due: {task.dueDate}
+                      </span>
+                    </div>
+                  </label>
+                );
+              })}
             </div>
           </div>
 
-          {/* Free School Benefits Card */}
           <div className="bg-card border border-primary/30 rounded-2xl p-5 space-y-3">
             <div className="flex items-center gap-2 text-primary font-serif font-bold text-sm">
               <Monitor className="w-4 h-4" />
@@ -327,3 +310,5 @@ export default function StudentDashboard({ userData }: StudentDashboardProps) {
     </div>
   );
 }
+
+export default StudentDashboard;
