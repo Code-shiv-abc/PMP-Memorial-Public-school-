@@ -94,7 +94,6 @@ export function MainLayout() {
           </div>
 
           <div className="flex items-center space-x-3 ml-auto">
-            {/* Bilingual Toggle Button */}
             <button
               type="button"
               onClick={() => setLanguage(language === "en" ? "hi" : "en")}
@@ -323,21 +322,21 @@ export function MainLayout() {
               <p>District Gonda, Uttar Pradesh 271504</p>
               <div className="pt-3 space-y-1.5">
                 <p>
-                  <span className="text-xs text-muted-foreground">Coordinator (Sunil Kumar Tiwari): </span>
-                  <a href="tel:+919792954343" className="block text-primary hover:underline font-medium">
-                    +91 97929 54343
-                  </a>
-                </p>
-                <p>
-                  <span className="text-xs text-muted-foreground">Manager (Shri Arvind Kumar Tiwari): </span>
+                  <span className="text-xs text-muted-foreground">Founder &amp; Manager (Shri Arvind Kumar Tiwari): </span>
                   <a href="tel:+917651995858" className="block text-primary hover:underline font-medium">
                     +91 76519 95858
                   </a>
                 </p>
                 <p>
-                  <span className="text-xs text-muted-foreground">Founder (Shri A.K. Tripathi): </span>
+                  <span className="text-xs text-muted-foreground">Principal (Shri A.K. Tripathi): </span>
                   <a href="tel:+916394282229" className="block text-primary hover:underline font-medium">
                     +91 63942 82229
+                  </a>
+                </p>
+                <p>
+                  <span className="text-xs text-muted-foreground">Coordinator (Sunil Kumar Tiwari): </span>
+                  <a href="tel:+919792954343" className="block text-primary hover:underline font-medium">
+                    +91 97929 54343
                   </a>
                 </p>
               </div>
