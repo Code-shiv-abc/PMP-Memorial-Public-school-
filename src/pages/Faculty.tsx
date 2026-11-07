@@ -1,132 +1,142 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mail, BookOpen, GraduationCap, Award } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Phone, BookOpen, GraduationCap, MessageCircle } from "lucide-react";
 
-// Leadership Team Data
 const FACULTY_MEMBERS = [
   {
     id: 1,
-    name: "Shri A.K. Tripathi",
-    title: "Principal",
-    qualifications: "M.A., B.Ed., TET, BTC",
-    contact: "6394282229",
-    expertise: ["Educational Leadership", "School Administration"],
-    bio: "Shri A.K. Tripathi serves as the Principal, guiding the school's academic vision and ensuring a disciplined learning environment. He brings extensive educational qualifications to support student growth and institutional excellence.",
-    image: "",
-    email: ""
+    name: "Shri Arvind Kumar Tiwari",
+    hindiName: "श्री अरविन्द कुमार तिवारी",
+    initials: "AKT",
+    title: "Founder & Manager (संस्थापक एवं प्रबंधक)",
+    department: "Institutional Vision & Management",
+    qualifications: "M.A., B.Ed., NET",
+    expertise: ["Educational Leadership", "Institutional Management", "Student Welfare"],
+    bio: "Visionary Founder and Manager of P.M.P. Memorial Public School, dedicated to modernizing rural education with free computer literacy, CCTV campus safety, and 100% registration fee waivers for girls in Classes 9 and 11.",
+    phone: "7651995858",
   },
   {
     id: 2,
-    name: "Shri Arvind Kumar Tiwari",
-    title: "Manager",
-    qualifications: "B.Sc., M.A. (English), B.Ed., TET, CTET",
-    contact: "7651995858",
-    expertise: ["School Management", "English Education", "Strategic Planning"],
-    bio: "As Manager, Shri Arvind Kumar Tiwari oversees the school's operations and strategic direction. With strong qualifications in Science and English, he is dedicated to providing modern and reliable education.",
-    image: "",
-    email: ""
+    name: "Shri A.K. Tripathi",
+    hindiName: "श्री ए. के. त्रिपाठी",
+    initials: "AT",
+    title: "Principal (प्रधानाचार्य)",
+    department: "Academic Administration & Pedagogy",
+    qualifications: "M.A., B.Ed., TET, CTET",
+    expertise: ["Academic Excellence", "Curriculum Planning", "Board Exam Preparation"],
+    bio: "Leading academic standards, disciplined classroom pedagogy, and monthly student evaluations across English Medium (PG–Class 8) and Hindi Medium (Class 3–12) wings.",
+    phone: "6394282229",
   },
   {
     id: 3,
     name: "Shri Sanjay Kumar Tiwari",
-    title: "Coordinator",
-    qualifications: "M.A., B.Ed., NET, TET, CTET",
-    contact: "",
-    expertise: ["Academic Coordination", "Curriculum Planning"],
-    bio: "Shri Sanjay Kumar Tiwari acts as the Coordinator, ensuring smooth academic operations and effective teaching methodologies. His comprehensive educational background supports the high standards of the institution.",
-    image: "",
-    email: ""
+    hindiName: "श्री संजय कुमार तिवारी",
+    initials: "SKT",
+    title: "President (अध्यक्ष)",
+    department: "Governance & Community Relations",
+    qualifications: "M.A., B.Ed., BTC, TET",
+    expertise: ["Institutional Governance", "Primary & Junior Education", "Community Outreach"],
+    bio: "Guiding the institution's holistic development programs, moral education standards, and cultural and sports initiatives across Gonda.",
+    phone: "9792954343",
   },
   {
     id: 4,
     name: "Sunil Kumar Tiwari",
-    title: "Administrator",
-    qualifications: "",
-    contact: "9792954343",
-    expertise: ["School Operations", "Admissions Management"],
-    bio: "Sunil Kumar Tiwari serves as the Administrator, handling daily school operations and coordinating the admissions process. He plays a vital role in maintaining a safe, organized, and peaceful educational environment.",
-    image: "",
-    email: ""
-  }
+    hindiName: "सुनील कुमार तिवारी",
+    initials: "ST",
+    title: "Coordinator (समन्वयक)",
+    department: "Admissions & Student Coordination",
+    qualifications: "Academic & Campus Coordinator",
+    expertise: ["Student Support", "Admissions Guidance", "Daily Operations"],
+    bio: "Coordinating daily academic schedules, parent communication, transport management, and smooth admission assistance for families across the region.",
+    phone: "9792954343",
+  },
 ];
 
-export default function Faculty() {
+export function Faculty() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Page Header */}
-      <div className="bg-primary/5 border-b border-border py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <Badge variant="outline" className="mb-4 border-primary text-primary bg-primary/10 tracking-widest uppercase">
-            Our Educators
-          </Badge>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-6">
-            Faculty & Leadership
+    <div className="min-h-screen bg-background py-16 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <span className="inline-block py-1 px-3 border border-primary/40 bg-primary/10 text-primary text-xs tracking-[0.2em] uppercase mb-4 font-medium">
+            मार्गदर्शक एवं शिक्षक वृन्द • Leadership &amp; Faculty
+          </span>
+          <h1 className="text-4xl font-serif font-extrabold text-foreground sm:text-5xl tracking-tight">
+            Distinguished Leadership &amp; Educators
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Meet the dedicated professionals who inspire, mentor, and guide our students. 
-            Our faculty brings together world-class academic qualifications with a genuine passion for teaching.
+          <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
+            Our institution is led by highly qualified educators holding <strong>M.A., B.Ed., NET, CTET, TET, and BTC</strong> certifications—dedicated to nurturing academic excellence and discipline.
           </p>
         </div>
-      </div>
 
-      {/* Faculty Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {FACULTY_MEMBERS.map((faculty) => (
-            <Card key={faculty.id} className="overflow-hidden border-border bg-card shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full">
-              <div className="h-48 overflow-hidden relative bg-muted">
-                {faculty.image && (
-                  <img
-                    src={faculty.image}
-                    alt={faculty.name}
-                    loading="lazy"
-                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                  />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
-                  <div className="p-4 text-white">
-                    <h3 className="font-serif font-bold text-2xl leading-tight">{faculty.name}</h3>
-                    <p className="text-white/90 text-sm font-medium">{faculty.title}</p>
-                    {faculty.contact && (
-                      <p className="text-[#D4AF37] text-sm mt-1">
-                        📞 {faculty.contact}
-                      </p>
-                    )}
-                  </div>
+            <Card
+              key={faculty.id}
+              className="overflow-hidden hover:border-primary/50 transition-all duration-300 border border-border bg-card flex flex-col"
+            >
+              <div className="h-44 bg-gradient-to-br from-[#1A1D23] via-[#0F1115] to-[#262114] border-b border-border relative flex flex-col items-center justify-center p-6 text-center">
+                <div className="w-16 h-16 rounded-full bg-primary/15 border-2 border-primary flex items-center justify-center text-primary font-serif font-bold text-xl mb-3 shadow-lg">
+                  {faculty.initials}
                 </div>
+                <Badge className="bg-primary text-primary-foreground hover:bg-primary font-serif border-none text-[11px] mb-1">
+                  {faculty.title}
+                </Badge>
+                <h2 className="text-lg font-serif font-bold text-foreground leading-tight">
+                  {faculty.name}
+                </h2>
+                <p className="text-xs text-primary/90 mt-0.5" lang="hi">
+                  {faculty.hindiName}
+                </p>
               </div>
-              <CardContent className="p-6 flex flex-col flex-1">
-                <div className="space-y-4 flex-1">
-                  {faculty.qualifications && (
-                    <div className="flex items-start text-sm">
-                      <GraduationCap className="w-5 h-5 mr-3 text-muted-foreground shrink-0 mt-0.5" />
-                      <span className="text-foreground leading-relaxed">{faculty.qualifications}</span>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-start text-sm">
-                    <BookOpen className="w-5 h-5 mr-3 text-muted-foreground shrink-0 mt-0.5" />
-                    <div className="flex flex-wrap gap-2">
-                      {faculty.expertise.map((subject, idx) => (
-                        <Badge key={idx} variant="secondary" className="font-normal text-xs bg-secondary/50">
-                          {subject}
-                        </Badge>
+
+              <CardContent className="p-6 flex-1 flex flex-col justify-between space-y-5">
+                <div>
+                  <div className="flex items-center gap-2 text-xs text-primary font-medium mb-3 bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">
+                    <GraduationCap className="w-4 h-4 shrink-0" />
+                    <span>{faculty.qualifications}</span>
+                  </div>
+
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                    {faculty.bio}
+                  </p>
+
+                  <div>
+                    <h3 className="text-[11px] font-serif font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-primary" />
+                      <span>Areas of Focus</span>
+                    </h3>
+                    <div className="flex flex-wrap gap-1.5">
+                      {faculty.expertise.map((item) => (
+                        <span
+                          key={item}
+                          className="text-[11px] bg-background text-foreground px-2.5 py-1 rounded-md border border-border"
+                        >
+                          {item}
+                        </span>
                       ))}
                     </div>
                   </div>
-
-                  <p className="text-muted-foreground text-sm leading-relaxed mt-4 pt-4 border-t border-border">
-                    {faculty.bio}
-                  </p>
                 </div>
-                
-                {faculty.email && (
-                  <div className="mt-6 pt-4 border-t border-border flex items-center text-sm text-primary hover:text-primary/80 transition-colors cursor-pointer w-max">
-                    <Mail className="w-4 h-4 mr-2" />
-                    {faculty.email}
-                  </div>
-                )}
+
+                <div className="pt-4 border-t border-border flex items-center gap-2">
+                  <a
+                    href={`tel:+91${faculty.phone}`}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-primary/15 hover:bg-primary hover:text-primary-foreground text-primary border border-primary/30 text-xs font-medium transition-colors"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>Call: {faculty.phone}</span>
+                  </a>
+                  <a
+                    href={`https://wa.me/91${faculty.phone}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`WhatsApp ${faculty.name}`}
+                    className="inline-flex items-center justify-center p-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 transition-colors"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                  </a>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -135,3 +145,5 @@ export default function Faculty() {
     </div>
   );
 }
+
+export default Faculty;
