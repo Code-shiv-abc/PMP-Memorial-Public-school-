@@ -3,24 +3,32 @@ import { createClient } from "@sanity/client";
 const projectId = import.meta.env.VITE_SANITY_PROJECT_ID;
 const dataset = import.meta.env.VITE_SANITY_DATASET || "production";
 
-// Safe client that won't crash the build if env variables are missing during CI
+export const isSanityConfigured = Boolean(
+  projectId &&
+    projectId !== "your_project_id" &&
+    projectId !== "placeholder" &&
+    projectId !== "undefined" &&
+    /^[a-z0-9-]+$/.test(projectId)
+);
+
 export const sanityClient = createClient({
-  projectId: projectId || "placeholder", 
-  dataset: dataset,
-  useCdn: false, // false = instant live updates when you hit 'Publish' in Sanity
+  projectId: isSanityConfigured ? projectId : "placeholder0",
+  dataset,
+  useCdn: false,
   apiVersion: "2024-01-01",
 });
 
-// A universal data fetcher
-export async function fetchFromSanity<T>(query: string): Promise<T | null> {
-  if (!projectId || projectId === "placeholder") return null;
+export async function fetchFromSanity<T = unknown>(query: string): Promise<T | null> {
+  if (!isSanityConfigured || !projectId) return null;
   try {
-    const data = await sanityClient.fetch(query);
-    return data as T;
+    const data = await sanityClient.fetch<T>(query);
+    return data ?? null;
   } catch (error) {
     console.error("Sanity fetch error:", error);
     return null;
   }
 }
+
+export const fetchSanityData = fetchFromSanity;
 
 export default sanityClient;
