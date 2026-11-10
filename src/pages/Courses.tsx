@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Sparkles, Search, BookOpen, Users } from "lucide-react";
-import { fetchFromSanity } from "../lib/sanity";
+import { Search } from "lucide-react";
+import { fetchFromSanity } from "@/src/lib/sanity";
 
 export interface SanityCourse {
   _id: string;
@@ -12,17 +11,16 @@ export interface SanityCourse {
   schedule: string;
 }
 
-export default function Courses() {
+export function Courses() {
   const [courses, setCourses] = useState<SanityCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDept, setSelectedDept] = useState("All");
 
   useEffect(() => {
-    // Fetch all published courses from Sanity CMS
     const query = `*[_type == "course" && !(_id in path("drafts.**"))] | order(name asc){
       _id,
-      name,
+      "name": coalesce(name, title, "Untitled Course"),
       department,
       description,
       instructor,
@@ -30,17 +28,21 @@ export default function Courses() {
     }`;
 
     fetchFromSanity<SanityCourse[]>(query).then((data) => {
-      setCourses(data || []);
+      setCourses(Array.isArray(data) ? data : []);
       setLoading(false);
     });
   }, []);
 
-  const departments = ["All", ...Array.from(new Set(courses.map((c) => c.department).filter(Boolean)))];
+  const departments = [
+    "All",
+    ...Array.from(new Set(courses.map((c) => c.department).filter(Boolean))),
+  ];
 
   const filteredCourses = courses.filter((course) => {
     const matchesSearch =
       (course.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (course.instructor || "").toLowerCase().includes(searchTerm.toLowerCase());
+      (course.instructor || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (course.description || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDept = selectedDept === "All" || course.department === selectedDept;
     return matchesSearch && matchesDept;
   });
@@ -63,6 +65,7 @@ export default function Courses() {
           <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
+            aria-label="Search subjects or teachers"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search subjects or teachers..."
@@ -73,8 +76,9 @@ export default function Courses() {
           {departments.map((dept) => (
             <button
               key={dept}
+              type="button"
               onClick={() => setSelectedDept(dept)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-colors ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
                 selectedDept === dept
                   ? "bg-primary text-primary-foreground"
                   : "bg-card border border-border text-muted-foreground"
@@ -87,7 +91,9 @@ export default function Courses() {
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-muted-foreground">Loading courses from Sanity CMS...</div>
+        <div className="text-center py-12 text-muted-foreground">
+          Loading courses from Sanity CMS...
+        </div>
       ) : filteredCourses.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-xl">
           No courses currently published in Sanity CMS.
@@ -95,17 +101,30 @@ export default function Courses() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCourses.map((course) => (
-            <div key={course._id} className="bg-card border border-border rounded-2xl p-6 flex flex-col shadow-md">
+            <div
+              key={course._id}
+              className="bg-card border border-border rounded-2xl p-6 flex flex-col shadow-md"
+            >
               <div className="flex-1 space-y-3">
                 <span className="px-2.5 py-1 rounded-md bg-primary/15 text-primary text-[11px] font-medium">
                   {course.department || "General"}
                 </span>
-                <h2 className="text-lg font-serif font-bold text-foreground">{course.name}</h2>
-                <p className="text-xs text-muted-foreground leading-relaxed">{course.description}</p>
-                
+                <h2 className="text-lg font-serif font-bold text-foreground">
+                  {course.name}
+                </h2>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {course.description}
+                </p>
+
                 <div className="pt-2 space-y-1 text-xs text-neutral-300 border-t border-border/60">
-                  <div><strong className="text-muted-foreground">Faculty:</strong> {course.instructor || "TBA"}</div>
-                  <div><strong className="text-muted-foreground">Schedule:</strong> {course.schedule || "TBA"}</div>
+                  <div>
+                    <strong className="text-muted-foreground">Faculty:</strong>{" "}
+                    {course.instructor || "TBA"}
+                  </div>
+                  <div>
+                    <strong className="text-muted-foreground">Schedule:</strong>{" "}
+                    {course.schedule || "TBA"}
+                  </div>
                 </div>
               </div>
             </div>
@@ -115,3 +134,5 @@ export default function Courses() {
     </div>
   );
 }
+
+export default Courses;
