@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   GraduationCap,
   CheckCircle2,
@@ -10,7 +10,15 @@ import {
 } from "lucide-react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { fetchFromSanity } from "@/src/lib/sanity";
 import toast from "react-hot-toast";
+
+interface SanityAdmissionInfo {
+  _id: string;
+  title?: string;
+  description?: string;
+  session?: string;
+}
 
 const CLASS_OPTIONS = [
   "Playgroup / Nursery / LKG / UKG (English Medium)",
@@ -23,6 +31,7 @@ const CLASS_OPTIONS = [
 ];
 
 export function Admissions() {
+  const [cmsAdmission, setCmsAdmission] = useState<SanityAdmissionInfo | null>(null);
   const [studentName, setStudentName] = useState("");
   const [guardianName, setGuardianName] = useState("");
   const [phone, setPhone] = useState("");
@@ -34,9 +43,27 @@ export function Admissions() {
   const [submitting, setSubmitting] = useState(false);
   const [submittedRef, setSubmittedRef] = useState<string | null>(null);
 
+  useEffect(() => {
+    document.title = "Admissions & Scholarships — P.M.P. Memorial Public School, Shahpur Gonda";
+
+    // Developer specified: Content type "Admission" in Sanity Studio
+    const query = `*[_type in ["admission", "admissions"] && !(_id in path("drafts.**"))] | order(_updatedAt desc)[0]{
+      _id,
+      "title": coalesce(title, heading, name),
+      "description": coalesce(description, message, details, body),
+      session
+    }`;
+
+    fetchFromSanity<SanityAdmissionInfo>(query).then((data) => {
+      if (data && (data.title || data.description)) {
+        setCmsAdmission(data);
+      }
+    });
+  }, []);
+
   const buildWhatsAppUrl = () => {
     const text = `नमस्ते P.M.P. Memorial Public School (Shahpur, Gonda),
-मैं प्रवेश (Admission 2026-27) के लिए आवेदन करना चाहता/चाहती हूँ:
+मैं प्रवेश (Admission) के लिए आवेदन करना चाहता/चाहती हूँ:
 • विद्यार्थी का नाम: ${studentName || "N/A"}
 • पिता/अभिभावक का नाम: ${guardianName || "N/A"}
 • कक्षा (Class): ${applyingClass}
@@ -55,7 +82,7 @@ export function Admissions() {
     }
 
     setSubmitting(true);
-    const refCode = `PMP-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const refCode = `PMP-${Math.floor(1000 + Math.random() * 9000)}`;
 
     try {
       await addDoc(collection(db, "admissions"), {
@@ -87,13 +114,17 @@ export function Admissions() {
         <div className="text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/15 border border-primary/40 text-primary text-xs font-serif font-semibold uppercase tracking-widest mb-4">
             <GraduationCap className="w-4 h-4" />
-            <span>प्रवेश प्रारम्भ 2026–27 • Admissions Open (PG to Class 12)</span>
+            <span>
+              {cmsAdmission?.session || "प्रवेश प्रारम्भ • Admissions Open (PG to Class 12)"}
+            </span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-serif font-extrabold text-foreground tracking-tight">
-            Online Admission &amp; Registration Form
+            {cmsAdmission?.title || "Online Admission & Registration Form"}
           </h1>
           <p className="mt-3 text-base sm:text-lg text-muted-foreground">
-            P.M.P. Memorial Public School, Gram Shahpur, Post Rek Sadiya, District Gonda (U.P.)
+            {typeof cmsAdmission?.description === "string"
+              ? cmsAdmission.description
+              : "P.M.P. Memorial Public School, Gram Shahpur, Post Rek Sadiya, District Gonda (U.P.)"}
           </p>
         </div>
 
@@ -179,7 +210,7 @@ export function Admissions() {
                     Student Admission Details (विद्यार्थी का विवरण)
                   </h2>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Fill out the details below for Session 2026–27 admission inquiry.
+                    Fill out the details below for admission inquiry.
                   </p>
                 </div>
 
