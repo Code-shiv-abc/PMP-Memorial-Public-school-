@@ -1,0 +1,44 @@
+{
+  "name": "P.M.P. Memorial Public School — Shahpur, Gonda",
+  "short_name": "PMP School",
+  "description": "Official Student Portal, Vidya AI 24x7 Tutor & Online Admissions for P.M.P. Memorial Public School, Gram Shahpur, Post Rek Sadiya, District Gonda (U.P.).",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0F1115",
+  "theme_color": "#D4AF37",
+  "lang": "en-IN",
+  "categories": ["education", "books", "productivity"],
+  "icons": [
+    {
+      "src": "/pmp-icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Vidya AI Tutor (विद्या AI)",
+      "short_name": "Vidya AI",
+      "description": "Ask 24x7 NCERT & UP Board doubts in Hindi or English",
+      "url": "/portal/study-assistant",
+      "icons": [{ "src": "/pmp-icon.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Online Admission Form",
+      "short_name": "Admissions",
+      "description": "Apply for PG to Class 12 Admission",
+      "url": "/admissions",
+      "icons": [{ "src": "/pmp-icon.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Student Portal",
+      "short_name": "Portal",
+      "description": "Open Student & Parent Dashboard",
+      "url": "/portal",
+      "icons": [{ "src": "/pmp-icon.svg", "sizes": "192x192" }]
+    }
+  ]
+}
