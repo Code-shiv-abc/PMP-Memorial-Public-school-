@@ -1,5 +1,5 @@
 {
-  "cleanUrls": true,
+  "cleanUrls": false,
   "trailingSlash": false,
   "headers": [
     {
@@ -46,7 +46,7 @@
       "destination": "/api/:path*"
     },
     {
-      "source": "/((?!api/|llms\\.txt|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|sw\\.js|pmp-icon\\.svg).*)",
+      "source": "/((?!api/|google2bc42f252b79945b\\.html|llms\\.txt|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|sw\\.js|pmp-icon\\.svg).*)",
       "destination": "/index.html"
     }
   ]
